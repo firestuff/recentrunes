@@ -9,7 +9,7 @@ var mediawiki = {
   'hr': [rr.StartOfLine(), rr.Literal('----'), rr.EndOfLine()],
   'i': [rr.Literal("''"), rr.Ref('wikichunk'), rr.Literal("''")],
   'nowiki': [rr.Literal('<nowiki>'), rr.MultiLineText(), rr.Literal('</nowiki>')],
-  'nowikiword': [rr.WordText(), rr.Literal('<nowiki/>')],
+  'text': [rr.MultiLineText()],
   'wikichunk': [rr.Or(
       'b',
       'del',
@@ -21,8 +21,7 @@ var mediawiki = {
       'hr',
       'i',
       'nowiki',
-      'nowikiword',
-      rr.MultiLineText()
+      'text'
    )],
   'wikidoc': [rr.ZeroOrMore('wikichunk')],
 };
