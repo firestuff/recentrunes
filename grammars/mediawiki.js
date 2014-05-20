@@ -22,7 +22,7 @@ var mediawiki = {
       'i',
       'nowiki',
       'nowikiword',
-      rr.MultiLineText(),
+      rr.MultiLineText()
    )],
   'wikidoc': [rr.ZeroOrMore('wikichunk')],
 };

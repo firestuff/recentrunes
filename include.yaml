@@ -1,0 +1,8 @@
+handlers:
+- url: /recentrunes
+  static_dir: recentrunes
+  secure: always
+  http_headers:
+    X-Frame-Options: DENY
+    X-Content-Type-Options: nosniff
+    Strict-Transport-Security: max-age=31536000; includeSubDomains
