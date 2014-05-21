@@ -310,7 +310,7 @@ RecentRunes.prototype.parse = function(nodeType, input) {
   if (lastRuleMinimize) {
     var lastMatch = lastRuleMinimize.match(
         input.slice(inputIndex), input, inputIndex, this);
-    if (!lastMatch || lastMatch[0] != input.length - inputIndex) {
+    if (!lastMatch) {
       return null;
     }
     inputIndex += lastMatch[0];
