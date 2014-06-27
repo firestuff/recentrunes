@@ -1,6 +1,19 @@
 var rr = {};
 
 
+rr.iterableFromArray_ = function(arr) {
+  var i = 0;
+  return {
+    'next': function() {
+      if (i < arr.length) {
+        return { 'done': false, 'value': arr[i++] };
+      } else {
+        return { 'done': true };
+      }
+    }.bind(this)
+  }
+};
+
 
 rr.Literal_ = function(value) {
   this.value_ = value;
@@ -8,20 +21,12 @@ rr.Literal_ = function(value) {
 
 rr.Literal_.prototype.match = function(context) {
   if (context.stringAfter(this.value_.length) == this.value_) {
-    context.advance(this.value_.length);
-    return [];
+    return rr.iterableFromArray_([{
+      'context': context.advance(this.value_.length),
+      'nodes': []
+    }]);
   } else {
-    return null;
-  }
-};
-
-rr.Literal_.prototype.search = function(context) {
-  console.log(context.stringAfter());
-  var index = context.stringAfter().indexOf(this.value_);
-  if (index == -1) {
-    return null;
-  } else {
-    return index;
+    return rr.iterableFromArray_([]);
   }
 };
 
@@ -37,12 +42,8 @@ rr.Ref_ = function(key) {
   this.key_ = key;
 };
 
-rr.Ref_.prototype.minimize = function(parser) {
-  return parser.minimize(this.key_);
-};
-
 rr.Ref_.prototype.match = function(context) {
-  return context.parser.parse(this.key_, context);
+  return context.rules[this.key_].match(context);
 };
 
 rr.Ref = function(key) {
@@ -53,33 +54,66 @@ rr.Ref.cache = {};
 
 
 
+rr.Node_ = function(name, child) {
+  this.name_ = name;
+  this.child_ = child;
+};
+
+rr.Node_.prototype.match = function(context) {
+  var iterator = this.child_.match(context);
+  return {
+    'next': function() {
+      var next = iterator.next();
+      if (next['done']) {
+        return { 'done': true };
+      }
+      var node = document.createElement(this.name_);
+      var nodes = next['value']['nodes'];
+      for (var i = 0; i < nodes.length; i++) {
+        node.appendChild(nodes[i]);
+      }
+      node.normalize();
+      return {
+        'done': false,
+        'value': {
+          'context': next['value']['context'],
+          'nodes': [node]
+        }
+      }
+    }.bind(this)
+  }
+};
+
+rr.Node = function(name, child) {
+  return new rr.Node_(name, child);
+};
+
+
+
 rr.EndOfLine_ = function() {
 };
 
 rr.EndOfLine_.prototype.match = function(context) {
   if (context.atEnd()) {
-    return [];
+    return rr.iterableFromArray_([{
+      'context': context,
+      'nodes': []
+    }]);
   }
   if (context.stringAfter(1) == '\n') {
-    context.advance(1);
+    return rr.iterableFromArray_([{
+      'context': context.advance(1),
+      'nodes': []
+    }]);
     return [];
   }
   if (context.stringBefore(1) == '\n') {
-    return [];
+    return rr.iterableFromArray_([{
+      'context': context,
+      'nodes': []
+    }]);
   }
-  return null;
-};
-
-rr.EndOfLine_.prototype.search = function(context) {
-  if (context.atEnd()) {
-    return 0;
-  }
-  var loc = context.stringAfter().indexOf('\n');
-  if (loc == -1) {
-    return context.remaining();
-  } else {
-    return loc;
-  }
+  return rr.iterableFromArray_([]);
 };
 
 rr.EndOfLine = function() {
@@ -94,14 +128,13 @@ rr.EndOfText_ = function() {
 
 rr.EndOfText_.prototype.match = function(context) {
   if (context.atEnd()) {
-    return null;
+    return rr.iterableFromArray_([{
+      'context': context,
+      'nodes': []
+    }]);
   } else {
-    return [];
+    return rr.iterableFromArray_([]);
   }
-};
-
-rr.EndOfText_.prototype.search = function(context) {
-  return context.remaining();
 };
 
 rr.EndOfText = function() {
@@ -114,14 +147,26 @@ rr.EndOfText.cache = new rr.EndOfText_();
 rr.MultiLineText_ = function() {
 };
 
-rr.MultiLineText_.prototype.minimize = function() {
-  return true;
-};
-
 rr.MultiLineText_.prototype.match = function(context) {
-  var ret = [document.createTextNode(context.stringAfter())];
-  context.advance(context.remaining());
-  return ret;
+  var i = 1;
+  return {
+    'next': function() {
+      if (i <= context.remaining()) {
+        var newNode = document.createTextNode(context.stringAfter(i));
+        var ret = {
+          'done': false,
+          'value': {
+            'nodes': [newNode],
+            'context': context.advance(i)
+          }
+        };
+        i++;
+        return ret;
+      } else {
+        return { 'done': true };
+      }
+    }.bind(this)
+  }
 };
 
 rr.MultiLineText = function() {
@@ -135,25 +180,30 @@ rr.Or_ = function(options) {
   this.options_ = options;
 };
 
-rr.Or_.prototype.minimize = function(parser) {
-  for (var i = 0; i < this.options_.length; i++) {
-    var option = this.options_[i];
-    if (parser.minimize(option)) {
-      return true;
-    }
-  }
-  return false;
-};
-
 rr.Or_.prototype.match = function(context) {
-  for (var i = 0; i < this.options_.length; i++) {
-    var option = this.options_[i];
-    var result = context.parser.parse(option, context);
-    if (result) {
-      return result;
-    }
+  var i = 0;
+  var lastIterator = null;
+  return {
+    'next': function() {
+      if (lastIterator) {
+        var next = lastIterator.next();
+        if (!next['done']) {
+          return next;
+        }
+      }
+      for (; i < this.options_.length; i++) {
+        var option = this.options_[i];
+        lastIterator = option.match(context);
+        var next = lastIterator.next();
+        if (next['done']) {
+          continue;
+        } else {
+          return next;
+        }
+      }
+      return { 'done': true };
+    }.bind(this)
   }
-  return null;
 };
 
 rr.Or = function() {
@@ -165,18 +215,30 @@ rr.Or = function() {
 rr.SingleLineText_ = function() {
 };
 
-rr.SingleLineText_.prototype.minimize = function() {
-  return true;
-}
-
 rr.SingleLineText_.prototype.match = function(context) {
-  var newLine = context.stringAfter().indexOf('\n');
-  if (newLine == -1) {
-    newLine = context.remaining();
+  var i = 1;
+  return {
+    'next': function() {
+      if (i <= context.remaining()) {
+        var newString = context.stringAfter(i);
+        if (newString.indexOf('\n') != -1) {
+          return { 'done': true };
+        }
+        var newNode = document.createTextNode(newString);
+        var ret = {
+          'done': false,
+          'value': {
+            'nodes': [newNode],
+            'context': context.advance(i)
+          }
+        };
+        i++;
+        return ret;
+      } else {
+        return {'done': true };
+      }
+    }.bind(this)
   }
-  var ret = [document.createTextNode(context.stringAfter(newLine))];
-  context.advance(newLine);
-  return ret;
 };
 
 rr.SingleLineText = function() {
@@ -191,27 +253,24 @@ rr.StartOfLine_ = function() {
 
 rr.StartOfLine_.prototype.match = function(context) {
   if (context.atStart()) {
-    return [];
+    return rr.iterableFromArray_([{
+      'context': context,
+      'nodes': []
+    }]);
   }
   if (context.stringAfter(1) == '\n') {
-    context.advance(1);
-    return [];
+    return rr.iterableFromArray_([{
+      'context': context.advance(1),
+      'nodes': []
+    }]);
   }
   if (context.stringBefore(1) == '\n') {
-    return [];
+    return rr.iterableFromArray_([{
+      'context': context,
+      'nodes': []
+    }]);
   }
-  return null;
-};
-
-rr.StartOfLine_.prototype.search = function(context) {
-  if (context.atStart()) {
-    return 0;
-  }
-  var loc = context.stringAfter().indexOf('\n');
-  if (loc == -1) {
-    return null;
-  }
-  return loc + 1;
+  return rr.iterableFromArray_([]);
 };
 
 rr.StartOfLine = function() {
@@ -221,47 +280,93 @@ rr.StartOfLine.cache = new rr.StartOfLine_();
 
 
 
-rr.ZeroOrMore_ = function(key) {
-  this.key_ = key;
-};
-
-rr.ZeroOrMore_.prototype.minimize = function(parser) {
-  return parser.minimize(this.key_);
+rr.ZeroOrMore_ = function(child) {
+  this.child_ = child;
 };
 
 rr.ZeroOrMore_.prototype.match = function(context) {
-  var ret = [];
-  while (context.inputIndex < context.input.length) {
-    var result = context.parser.parse(this.key_, context);
-    if (!result) {
+  var nodes = [];
+  while (!context.atEnd()) {
+    var next = this.child_.match(context).next();
+    if (next['done']) {
       break;
     }
-    result.forEach(function(child) {
-      ret.push(child);
-    });
-  };
-  return ret;
+    context = next['value']['context'];
+    Array.prototype.push.apply(nodes, next['value']['nodes']);
+  }
+  return rr.iterableFromArray_([{
+    'context': context,
+    'nodes': nodes
+  }]);
 };
 
-rr.ZeroOrMore = function(key) {
-  return (rr.ZeroOrMore.cache[key] ||
-          (rr.ZeroOrMore.cache[key] = new rr.ZeroOrMore_(key)));
+rr.ZeroOrMore = function(child) {
+  return new rr.ZeroOrMore_(child);
 };
-rr.ZeroOrMore.cache = {};
 
 
-rr.Context = function(parser, input, inputIndex) {
-  this.parser = parser;
+
+rr.Sequence_ = function(children) {
+  this.child_ = children[0];
+  if (children.length > 1) {
+    this.next_ = rr.Sequence.apply(null, children.slice(1));
+  } else {
+    this.next_ = null;
+  }
+};
+
+rr.Sequence_.prototype.match = function(context) {
+  var childIterator = this.child_.match(context);
+  if (!this.next_) {
+    return childIterator;
+  }
+  var currentChildValue = null;
+  var nextIterator = null;
+  return {
+    'next': function() {
+      while (true) {
+        if (!currentChildValue) {
+          currentChildValue = childIterator.next();
+          if (currentChildValue['done']) {
+            return { 'done': true };
+          }
+          nextIterator = null;
+        }
+        if (!nextIterator) {
+          nextIterator = this.next_.match(currentChildValue['value']['context']);
+        }
+        var nextAppendValue = nextIterator.next();
+        if (nextAppendValue['done']) {
+          currentChildValue = null;
+          continue;
+        }
+        return {
+          'done': false,
+          'value': {
+            'context': nextAppendValue['value']['context'],
+            'nodes': currentChildValue['value']['nodes'].concat(
+                nextAppendValue['value']['nodes'])
+          }
+        }
+      }
+    }.bind(this)
+  }
+};
+
+rr.Sequence = function() {
+  return new rr.Sequence_(Array.prototype.slice.call(arguments));
+};
+
+
+
+rr.Context = function(rules, input, inputIndex) {
+  this.rules = rules;
   this.input = input;
   this.inputIndex = inputIndex || 0;
 };
 
 rr.Context.prototype.copy = function() {
-  return new rr.Context(this.parser, this.input, this.inputIndex);
-};
-
-rr.Context.prototype.truncate = function(numChars) {
-  this.input = this.input.slice(this.inputIndex, this.inputIndex + numChars);
+  return new rr.Context(this.rules, this.input, this.inputIndex);
 };
 
 rr.Context.prototype.stringAfter = function(numChars) {
@@ -293,102 +398,7 @@ rr.Context.prototype.remaining = function() {
 };
 
 rr.Context.prototype.advance = function(numChars) {
-  console.log('advance', numChars);
-  this.inputIndex += numChars;
-};
-
-
-var RecentRunes = function(dictionary) {
-  this.dictionary_ = dictionary;
-};
-
-RecentRunes.prototype.parseString = function(nodeType, input) {
-  var context = new rr.Context(this, input);
-  var ret = this.parse(nodeType, context);
-  if (ret) {
-    return ret[0];
-  } else {
-    return null;
-  }
-};
-
-RecentRunes.prototype.minimize = function(nodeType) {
-  var rules = this.dictionary_[nodeType];
-  for (var i = 0; i < rules.length; i++) {
-    if (rules.minimize && rules.minimize(this)) {
-      return true;
-    }
-  }
-  return false;
-};
-
-RecentRunes.prototype.parse = function(nodeType, origContext) {
-  var context = origContext.copy();
-  var ret = document.createElement(nodeType);
-  var rules = this.dictionary_[nodeType];
-  rules = [];
-  var lastRuleMinimize = false;
-  for (var i = 0; i < rules.length; i++) {
-    console.log('nodeType:', nodeType, 'rule:', i);
-    var rule = rules[i];
-    if (rule.minimize && rule.minimize(this)) {
-      if (lastRuleMinimize) {
-        // Two minimize rules in a row is ambiguous
-        return null;
-      }
-      lastRuleMinimize = rule;
-      continue;
-    }
-    if (lastRuleMinimize) {
-      // Check if this rule can find a match in the string
-      var loc = rule.search(context);
-      if (loc == null) {
-        console.log('search fail');
-        return null;
-      }
-
-      // Check if the previous rule will match the interim data
-      var prevContext = context.copy();
-      prevContext.truncate(loc);
-      var prevMatch = lastRuleMinimize.match(prevContext);
-      if (!prevMatch) {
-        console.log('prevMatch fail');
-        return null;
-      };
-      context.advance(prevContext.inputIndex - context.inputIndex);
-      prevMatch.forEach(function(child) {
-        ret.appendChild(child);
-      });
-
-      lastRuleMinimize = false;
-    }
-    console.log(context);
-    var match = rule.match(context);
-    if (!match) {
-      console.log('rule fail');
-      return null;
-    }
-    match.forEach(function(child) {
-      ret.appendChild(child);
-    });
-  };
-
-  if (lastRuleMinimize) {
-    var prevContext = context.copy();
-    prevContext.truncate(loc);
-    var lastMatch = lastRuleMinimize.match(prevContext);
-    if (!lastMatch) {
-      return null;
-    }
-    context.advance(prevContext.inputIndex - context.inputIndex);
-    lastMatch.forEach(function(child) {
-      ret.appendChild(child);
-    });
-  }
-
-  console.log('nodeType:', nodeType, 'context:', context);
-
-  origContext.advance(context.inputIndex - origContext.inputIndex);
-
-  return [ret];
+  var context = this.copy();
+  context.inputIndex += numChars;
+  return context;
 };
