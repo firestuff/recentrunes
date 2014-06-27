@@ -6,16 +6,18 @@ rr.Literal_ = function(value) {
   this.value_ = value;
 };
 
-rr.Literal_.prototype.match = function(input) {
-  if (input.slice(0, this.value_.length) == this.value_) {
-    return [this.value_.length, null];
+rr.Literal_.prototype.match = function(context) {
+  if (context.stringAfter(this.value_.length) == this.value_) {
+    context.advance(this.value_.length);
+    return [];
   } else {
     return null;
   }
 };
 
-rr.Literal_.prototype.search = function(input) {
-  var index = input.indexOf(this.value_);
+rr.Literal_.prototype.search = function(context) {
+  console.log(context.stringAfter());
+  var index = context.stringAfter().indexOf(this.value_);
   if (index == -1) {
     return null;
   } else {
@@ -39,8 +41,8 @@ rr.Ref_.prototype.minimize = function(parser) {
   return parser.minimize(this.key_);
 };
 
-rr.Ref_.prototype.match = function(input, fullInput, inputIndex, parser) {
-  return parser.parse(this.key_, input);
+rr.Ref_.prototype.match = function(context) {
+  return context.parser.parse(this.key_, context);
 };
 
 rr.Ref = function(key) {
@@ -54,26 +56,27 @@ rr.Ref.cache = {};
 rr.EndOfLine_ = function() {
 };
 
-rr.EndOfLine_.prototype.match = function(input, fullInput, inputIndex) {
-  if (input.length == 0) {
-    return [0, null];
+rr.EndOfLine_.prototype.match = function(context) {
+  if (context.atEnd()) {
+    return [];
   }
-  if (input[0] == '\n') {
-    return [1, null];
+  if (context.stringAfter(1) == '\n') {
+    context.advance(1);
+    return [];
   }
-  if (inputIndex > 0 && fullInput[inputIndex - 1] == '\n') {
-    return [0, null];
+  if (context.stringBefore(1) == '\n') {
+    return [];
   }
   return null;
 };
 
-rr.EndOfLine_.prototype.search = function(input, fullInput, inputIndex) {
-  if (input.length == 0) {
+rr.EndOfLine_.prototype.search = function(context) {
+  if (context.atEnd()) {
     return 0;
   }
-  var loc = input.indexOf('\n');
+  var loc = context.stringAfter().indexOf('\n');
   if (loc == -1) {
-    return input.length;
+    return context.remaining();
   } else {
     return loc;
   }
@@ -89,16 +92,16 @@ rr.EndOfLine.cache = new rr.EndOfLine_();
 rr.EndOfText_ = function() {
 };
 
-rr.EndOfText_.prototype.match = function(input) {
-  if (input.length) {
+rr.EndOfText_.prototype.match = function(context) {
+  if (context.atEnd()) {
     return null;
   } else {
-    return [0, null];
+    return [];
   }
 };
 
-rr.EndOfText_.prototype.search = function(input) {
-  return input.length;
+rr.EndOfText_.prototype.search = function(context) {
+  return context.remaining();
 };
 
 rr.EndOfText = function() {
@@ -115,8 +118,10 @@ rr.MultiLineText_.prototype.minimize = function() {
   return true;
 };
 
-rr.MultiLineText_.prototype.match = function(input) {
-  return [input.length, document.createTextNode(input)];
+rr.MultiLineText_.prototype.match = function(context) {
+  var ret = [document.createTextNode(context.stringAfter())];
+  context.advance(context.remaining());
+  return ret;
 };
 
 rr.MultiLineText = function() {
@@ -135,15 +140,15 @@ rr.Or_.prototype.minimize = function(parser) {
     var option = this.options_[i];
     if (parser.minimize(option)) {
       return true;
-    };
+    }
   }
   return false;
 };
 
-rr.Or_.prototype.match = function(input, fullInput, inputIndex, parser) {
+rr.Or_.prototype.match = function(context) {
   for (var i = 0; i < this.options_.length; i++) {
     var option = this.options_[i];
-    var result = parser.parse(option, input);
+    var result = context.parser.parse(option, context);
     if (result) {
       return result;
     }
@@ -164,13 +169,14 @@ rr.SingleLineText_.prototype.minimize = function() {
   return true;
 }
 
-rr.SingleLineText_.prototype.match = function(input) {
-  var newLine = input.indexOf('\n');
+rr.SingleLineText_.prototype.match = function(context) {
+  var newLine = context.stringAfter().indexOf('\n');
   if (newLine == -1) {
-    return [input.length, document.createTextNode(input)];
-  } else {
-    return [newLine, document.createTextNode(input.slice(0, newLine))];
+    newLine = context.remaining();
   }
+  var ret = [document.createTextNode(context.stringAfter(newLine))];
+  context.advance(newLine);
+  return ret;
 };
 
 rr.SingleLineText = function() {
@@ -183,24 +189,25 @@ rr.SingleLineText.cache = new rr.SingleLineText_();
 rr.StartOfLine_ = function() {
 };
 
-rr.StartOfLine_.prototype.match = function(input, fullInput, inputIndex) {
-  if (inputIndex == 0) {
-    return [0, null];
+rr.StartOfLine_.prototype.match = function(context) {
+  if (context.atStart()) {
+    return [];
   }
-  if (input[0] == '\n') {
-    return [1, null];
+  if (context.stringAfter(1) == '\n') {
+    context.advance(1);
+    return [];
   }
-  if (fullInput[inputIndex - 1] == '\n') {
-    return [0, null];
+  if (context.stringBefore(1) == '\n') {
+    return [];
   }
   return null;
 };
 
-rr.StartOfLine_.prototype.search = function(input, fullInput, inputIndex) {
-  if (inputIndex == 0) {
+rr.StartOfLine_.prototype.search = function(context) {
+  if (context.atStart()) {
     return 0;
   }
-  var loc = input.indexOf('\n');
+  var loc = context.stringAfter().indexOf('\n');
   if (loc == -1) {
     return null;
   }
@@ -222,20 +229,18 @@ rr.ZeroOrMore_.prototype.minimize = function(parser) {
   return parser.minimize(this.key_);
 };
 
-rr.ZeroOrMore_.prototype.match = function(input, fullInput, inputIndex, parser) {
-  var ret = document.createElement('group');
-  var parseIndex = 0;
-  while (parseIndex < input.length - 1) {
-    var result = parser.parse(this.key_, input.slice(parseIndex));
+rr.ZeroOrMore_.prototype.match = function(context) {
+  var ret = [];
+  while (context.inputIndex < context.input.length) {
+    var result = context.parser.parse(this.key_, context);
     if (!result) {
       break;
     }
-    parseIndex += result[0];
-    if (result[1]) {
-      ret.appendChild(result[1]);
-    }
+    result.forEach(function(child) {
+      ret.push(child);
+    });
   };
-  return [parseIndex, ret];
+  return ret;
 };
 
 rr.ZeroOrMore = function(key) {
@@ -245,9 +250,66 @@ rr.ZeroOrMore = function(key) {
 rr.ZeroOrMore.cache = {};
 
 
+rr.Context = function(parser, input, inputIndex) {
+  this.parser = parser;
+  this.input = input;
+  this.inputIndex = inputIndex || 0;
+};
+
+rr.Context.prototype.copy = function() {
+  return new rr.Context(this.parser, this.input, this.inputIndex);
+};
+
+rr.Context.prototype.truncate = function(numChars) {
+  this.input = this.input.slice(this.inputIndex, this.inputIndex + numChars);
+};
+
+rr.Context.prototype.stringAfter = function(numChars) {
+  if (numChars == null) {
+    numChars = this.remaining();
+  }
+  return this.input.slice(this.inputIndex, this.inputIndex + numChars);
+};
+
+rr.Context.prototype.stringBefore = function(numChars) {
+  var start = this.inputIndex - numChars;
+  if (start < 0) {
+    numChars += start;
+    start = 0;
+  }
+  return this.input.slice(start, numChars);
+};
+
+rr.Context.prototype.atStart = function() {
+  return this.inputIndex == 0;
+};
+
+rr.Context.prototype.atEnd = function() {
+  return this.inputIndex == this.input.length;
+};
+
+rr.Context.prototype.remaining = function() {
+  return this.input.length - this.inputIndex;
+};
+
+rr.Context.prototype.advance = function(numChars) {
+  console.log('advance', numChars);
+  this.inputIndex += numChars;
+};
+
 
 var RecentRunes = function(dictionary) {
   this.dictionary_ = dictionary;
+};
+
+RecentRunes.prototype.parseString = function(nodeType, input) {
+  var context = new rr.Context(this, input);
+  var ret = this.parse(nodeType, context);
+  if (ret) {
+    return ret[0];
+  } else {
+    return null;
+  }
 };
 
 RecentRunes.prototype.minimize = function(nodeType) {
@@ -260,12 +322,14 @@ RecentRunes.prototype.minimize = function(nodeType) {
   return false;
 };
 
-RecentRunes.prototype.parse = function(nodeType, input) {
+RecentRunes.prototype.parse = function(nodeType, origContext) {
+  var context = origContext.copy();
   var ret = document.createElement(nodeType);
   var rules = this.dictionary_[nodeType];
-  var inputIndex = 0;
+  rules = [];
   var lastRuleMinimize = false;
   for (var i = 0; i < rules.length; i++) {
+    console.log('nodeType:', nodeType, 'rule:', i);
     var rule = rules[i];
     if (rule.minimize && rule.minimize(this)) {
       if (lastRuleMinimize) {
@@ -277,47 +341,54 @@ RecentRunes.prototype.parse = function(nodeType, input) {
     }
     if (lastRuleMinimize) {
       // Check if this rule can find a match in the string
-      var loc = rule.search(input.slice(inputIndex));
+      var loc = rule.search(context);
       if (loc == null) {
+        console.log('search fail');
         return null;
       }
 
       // Check if the previous rule will match the interim data
-      var prevMatch = lastRuleMinimize.match(
-          input.slice(inputIndex, inputIndex + loc),
-          input, inputIndex, this);
-      if (!prevMatch || prevMatch[0] != loc) {
+      var prevContext = context.copy();
+      prevContext.truncate(loc);
+      var prevMatch = lastRuleMinimize.match(prevContext);
+      if (!prevMatch) {
+        console.log('prevMatch fail');
         return null;
       };
-      inputIndex += prevMatch[0];
-      if (prevMatch[1]) {
-        ret.appendChild(prevMatch[1]);
-      }
+      context.advance(prevContext.inputIndex - context.inputIndex);
+      prevMatch.forEach(function(child) {
+        ret.appendChild(child);
+      });
 
       lastRuleMinimize = false;
     }
-    var match = rule.match(
-        input.slice(inputIndex), input, inputIndex, this);
+    console.log(context);
+    var match = rule.match(context);
     if (!match) {
+      console.log('rule fail');
       return null;
     }
-    inputIndex += match[0];
-    if (match[1]) {
-      ret.appendChild(match[1]);
-    }
+    match.forEach(function(child) {
+      ret.appendChild(child);
+    });
   };
 
   if (lastRuleMinimize) {
-    var lastMatch = lastRuleMinimize.match(
-        input.slice(inputIndex), input, inputIndex, this);
+    var prevContext = context.copy();
+    prevContext.truncate(loc);
+    var lastMatch = lastRuleMinimize.match(prevContext);
     if (!lastMatch) {
       return null;
     }
-    inputIndex += lastMatch[0];
-    if (lastMatch[1]) {
-      ret.appendChild(lastMatch[1]);
-    }
+    context.advance(prevContext.inputIndex - context.inputIndex);
+    lastMatch.forEach(function(child) {
+      ret.appendChild(child);
+    });
   }
 
-  return [inputIndex, ret];
+  console.log('nodeType:', nodeType, 'context:', context);
+
+  origContext.advance(context.inputIndex - origContext.inputIndex);
+
+  return [ret];
 };
