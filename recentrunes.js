@@ -530,7 +530,7 @@ rr.ZeroOrMore = function(child) {
  * @param {rr.typeMatcher} child2
  * @private
  */
-rr.Pair_ = function(child1, child2) {
+rr.SequentialPair_ = function(child1, child2) {
   this.child1_ = child1;
   this.child2_ = child2;
 };
@@ -540,7 +540,7 @@ rr.Pair_ = function(child1, child2) {
  * @param {rr.Context} context
  * @return {rr.typeIterator}
  */
-rr.Pair_.prototype.match = function(context) {
+rr.SequentialPair_.prototype.match = function(context) {
   var child1Iterator = this.child1_.match(context);
   var child1Value = null;
   var child2Iterator = null;
@@ -580,22 +580,24 @@ rr.Pair_.prototype.match = function(context) {
 /**
  * @param {rr.typeMatcher} child1
  * @param {rr.typeMatcher} child2
- * @return {rr.Pair_}
+ * @return {rr.SequentialPair_}
  */
-rr.Pair = function(child1, child2) {
-  return new rr.Pair_(child1, child2);
+rr.SequentialPair = function(child1, child2) {
+  return new rr.SequentialPair_(child1, child2);
 };
 
 
 /**
- * @return {rr.Pair_|rr.typeMatcher}
+ * @return {rr.SequentialPair_|rr.typeMatcher}
  */
 rr.Sequence = function() {
   var children = Array.prototype.slice.call(arguments);
   if (children.length == 1) {
     return children[0];
   }
-  return rr.Pair(children[0], rr.Sequence.apply(null, children.slice(1)));
+  return rr.SequentialPair(
+      children[0],
+      rr.Sequence.apply(null, children.slice(1)));
 };
 
 
