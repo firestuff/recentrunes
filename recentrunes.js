@@ -526,16 +526,13 @@ rr.ZeroOrMore = function(child) {
 /**
  * @constructor
  *
- * @param {Array.<rr.typeMatcher>} children
+ * @param {rr.typeMatcher} child1
+ * @param {rr.typeMatcher} child2
  * @private
  */
-rr.Sequence_ = function(children) {
-  this.child_ = children[0];
-  if (children.length > 1) {
-    this.next_ = rr.Sequence.apply(null, children.slice(1));
-  } else {
-    this.next_ = null;
-  }
+rr.Pair_ = function(child1, child2) {
+  this.child1_ = child1;
+  this.child2_ = child2;
 };
 
 
@@ -543,38 +540,35 @@ rr.Sequence_ = function(children) {
  * @param {rr.Context} context
  * @return {rr.typeIterator}
  */
-rr.Sequence_.prototype.match = function(context) {
-  var childIterator = this.child_.match(context);
-  if (!this.next_) {
-    return childIterator;
-  }
-  var currentChildValue = null;
-  var nextIterator = null;
+rr.Pair_.prototype.match = function(context) {
+  var child1Iterator = this.child1_.match(context);
+  var child1Value = null;
+  var child2Iterator = null;
   return {
     'next': function() {
       while (true) {
-        if (!currentChildValue) {
-          currentChildValue = childIterator.next();
-          if (currentChildValue['done']) {
+        if (!child1Value) {
+          child1Value = child1Iterator.next();
+          if (child1Value['done']) {
             return { 'done': true };
           }
-          nextIterator = null;
+          child2Iterator = null;
         }
-        if (!nextIterator) {
-          nextIterator = this.next_.match(
-              currentChildValue['value']['context']);
+        if (!child2Iterator) {
+          child2Iterator = this.child2_.match(
+              child1Value['value']['context']);
         }
-        var nextAppendValue = nextIterator.next();
-        if (nextAppendValue['done']) {
-          currentChildValue = null;
+        var child2Value = child2Iterator.next();
+        if (child2Value['done']) {
+          child1Value = null;
           continue;
         }
         return {
           'done': false,
           'value': {
-            'context': nextAppendValue['value']['context'],
-            'nodes': currentChildValue['value']['nodes'].concat(
-                nextAppendValue['value']['nodes'])
+            'context': child2Value['value']['context'],
+            'nodes': child1Value['value']['nodes'].concat(
+                child2Value['value']['nodes'])
           }
         };
       }
@@ -584,10 +578,24 @@ rr.Sequence_.prototype.match = function(context) {
 
 
 /**
- * @return {rr.Sequence_}
+ * @param {rr.typeMatcher} child1
+ * @param {rr.typeMatcher} child2
+ * @return {rr.Pair_}
+ */
+rr.Pair = function(child1, child2) {
+  return new rr.Pair_(child1, child2);
+};
+
+
+/**
+ * @return {rr.Pair_|rr.typeMatcher}
  */
 rr.Sequence = function() {
-  return new rr.Sequence_(Array.prototype.slice.call(arguments));
+  var children = Array.prototype.slice.call(arguments);
+  if (children.length == 1) {
+    return children[0];
+  }
+  return rr.Pair(children[0], rr.Sequence.apply(null, children.slice(1)));
 };
 
 
