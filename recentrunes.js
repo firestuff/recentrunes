@@ -1,6 +1,30 @@
 var rr = {};
 
 
+/**
+ * @typedef {{done: boolean,
+ *            value: *}}
+ */
+rr.typeIteratorResult;
+
+
+/**
+ * @typedef {{next: function(): rr.typeIteratorResult}}
+ */
+rr.typeIterator;
+
+
+/**
+ * @typedef {Object}
+ */
+rr.typeMatcher;
+
+
+/**
+ * @param {Array.<*>} arr
+ * @return {rr.typeIterator}
+ * @private
+ */
 rr.iterableFromArray_ = function(arr) {
   var i = 0;
   return {
@@ -10,15 +34,27 @@ rr.iterableFromArray_ = function(arr) {
       } else {
         return { 'done': true };
       }
-    }.bind(this)
-  }
+    }
+  };
 };
 
 
+
+/**
+ * @constructor
+ *
+ * @param {string} value
+ * @private
+ */
 rr.Literal_ = function(value) {
   this.value_ = value;
 };
 
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
 rr.Literal_.prototype.match = function(context) {
   if (context.stringAfter(this.value_.length) == this.value_) {
     return rr.iterableFromArray_([{
@@ -30,35 +66,80 @@ rr.Literal_.prototype.match = function(context) {
   }
 };
 
+
+/**
+ * @param {string} value
+ * @return {rr.Literal_}
+ */
 rr.Literal = function(value) {
   return (rr.Literal.cache[value] ||
           (rr.Literal.cache[value] = new rr.Literal_(value)));
 };
+
+
+/**
+ * @type {Object.<string, rr.Literal_>}
+ * @const
+ */
 rr.Literal.cache = {};
 
 
 
+/**
+ * @constructor
+ *
+ * @param {string} key
+ * @private
+ */
 rr.Ref_ = function(key) {
   this.key_ = key;
 };
 
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
 rr.Ref_.prototype.match = function(context) {
   return context.rules[this.key_].match(context);
 };
 
+
+/**
+ * @param {string} key
+ * @return {rr.Ref_}
+ */
 rr.Ref = function(key) {
   return (rr.Ref.cache[key] ||
           (rr.Ref.cache[key] = new rr.Ref_(key)));
 };
+
+
+/**
+ * @type {Object.<string, rr.Ref_>}
+ * @const
+ */
 rr.Ref.cache = {};
 
 
 
+/**
+ * @constructor
+ *
+ * @param {string} name
+ * @param {rr.typeMatcher} child
+ * @private
+ */
 rr.Node_ = function(name, child) {
   this.name_ = name;
   this.child_ = child;
 };
 
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
 rr.Node_.prototype.match = function(context) {
   var iterator = this.child_.match(context);
   return {
@@ -79,20 +160,36 @@ rr.Node_.prototype.match = function(context) {
           'context': next['value']['context'],
           'nodes': [node]
         }
-      }
+      };
     }.bind(this)
-  }
+  };
 };
 
+
+/**
+ * @param {string} name
+ * @param {rr.typeMatcher} child
+ * @return {rr.Node_}
+ */
 rr.Node = function(name, child) {
   return new rr.Node_(name, child);
 };
 
 
 
+/**
+ * @constructor
+ *
+ * @private
+ */
 rr.EndOfLine_ = function() {
 };
 
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
 rr.EndOfLine_.prototype.match = function(context) {
   if (context.atEnd()) {
     return rr.iterableFromArray_([{
@@ -105,7 +202,6 @@ rr.EndOfLine_.prototype.match = function(context) {
       'context': context.advance(1),
       'nodes': []
     }]);
-    return [];
   }
   if (context.stringBefore(1) == '\n') {
     return rr.iterableFromArray_([{
@@ -116,16 +212,36 @@ rr.EndOfLine_.prototype.match = function(context) {
   return rr.iterableFromArray_([]);
 };
 
+
+/**
+ * @return {rr.EndOfLine_}
+ */
 rr.EndOfLine = function() {
   return rr.EndOfLine.cache;
 };
+
+
+/**
+ * @type {rr.EndOfLine_}
+ * @const
+ */
 rr.EndOfLine.cache = new rr.EndOfLine_();
 
 
 
+/**
+ * @constructor
+ *
+ * @private
+ */
 rr.EndOfText_ = function() {
 };
 
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
 rr.EndOfText_.prototype.match = function(context) {
   if (context.atEnd()) {
     return rr.iterableFromArray_([{
@@ -137,16 +253,36 @@ rr.EndOfText_.prototype.match = function(context) {
   }
 };
 
+
+/**
+ * @return {rr.EndOfText_}
+ */
 rr.EndOfText = function() {
   return rr.EndOfText.cache;
 };
+
+
+/**
+ * @type {rr.EndOfText_}
+ * @const
+ */
 rr.EndOfText.cache = new rr.EndOfText_();
 
 
 
+/**
+ * @constructor
+ *
+ * @private
+ */
 rr.MultiLineText_ = function() {
 };
 
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
 rr.MultiLineText_.prototype.match = function(context) {
   var i = 1;
   return {
@@ -166,20 +302,41 @@ rr.MultiLineText_.prototype.match = function(context) {
         return { 'done': true };
       }
     }.bind(this)
-  }
+  };
 };
 
+
+/**
+ * @return {rr.MultiLineText_}
+ */
 rr.MultiLineText = function() {
   return rr.MultiLineText.cache;
 };
+
+
+/**
+ * @type {rr.MultiLineText_}
+ * @const
+ */
 rr.MultiLineText.cache = new rr.MultiLineText_();
 
 
 
+/**
+ * @constructor
+ *
+ * @param {Array.<rr.typeMatcher>} options
+ * @private
+ */
 rr.Or_ = function(options) {
   this.options_ = options;
 };
 
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
 rr.Or_.prototype.match = function(context) {
   var i = 0;
   var lastIterator = null;
@@ -203,18 +360,32 @@ rr.Or_.prototype.match = function(context) {
       }
       return { 'done': true };
     }.bind(this)
-  }
+  };
 };
 
+
+/**
+ * @return {rr.Or_}
+ */
 rr.Or = function() {
-  return new rr.Or_(arguments);
+  return new rr.Or_(Array.prototype.slice.call(arguments, 0));
 };
 
 
 
+/**
+ * @constructor
+ *
+ * @private
+ */
 rr.SingleLineText_ = function() {
 };
 
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
 rr.SingleLineText_.prototype.match = function(context) {
   var i = 1;
   return {
@@ -238,19 +409,39 @@ rr.SingleLineText_.prototype.match = function(context) {
         return {'done': true };
       }
     }.bind(this)
-  }
+  };
 };
 
+
+/**
+ * @return {rr.SingleLineText_}
+ */
 rr.SingleLineText = function() {
   return rr.SingleLineText.cache;
 };
+
+
+/**
+ * @type {rr.SingleLineText_}
+ * @const
+ */
 rr.SingleLineText.cache = new rr.SingleLineText_();
 
 
 
+/**
+ * @constructor
+ *
+ * @private
+ */
 rr.StartOfLine_ = function() {
 };
 
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
 rr.StartOfLine_.prototype.match = function(context) {
   if (context.atStart()) {
     return rr.iterableFromArray_([{
@@ -273,17 +464,38 @@ rr.StartOfLine_.prototype.match = function(context) {
   return rr.iterableFromArray_([]);
 };
 
+
+/**
+ * @return {rr.StartOfLine_}
+ */
 rr.StartOfLine = function() {
   return rr.StartOfLine.cache;
 };
+
+
+/**
+ * @type {rr.StartOfLine_}
+ * @const
+ */
 rr.StartOfLine.cache = new rr.StartOfLine_();
 
 
 
+/**
+ * @constructor
+ *
+ * @param {rr.typeMatcher} child
+ * @private
+ */
 rr.ZeroOrMore_ = function(child) {
   this.child_ = child;
 };
 
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
 rr.ZeroOrMore_.prototype.match = function(context) {
   var nodes = [];
   while (!context.atEnd()) {
@@ -300,12 +512,23 @@ rr.ZeroOrMore_.prototype.match = function(context) {
   }]);
 };
 
+
+/**
+ * @param {rr.typeMatcher} child
+ * @return {rr.ZeroOrMore_}
+ */
 rr.ZeroOrMore = function(child) {
   return new rr.ZeroOrMore_(child);
 };
 
 
 
+/**
+ * @constructor
+ *
+ * @param {Array.<rr.typeMatcher>} children
+ * @private
+ */
 rr.Sequence_ = function(children) {
   this.child_ = children[0];
   if (children.length > 1) {
@@ -315,6 +538,11 @@ rr.Sequence_ = function(children) {
   }
 };
 
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
 rr.Sequence_.prototype.match = function(context) {
   var childIterator = this.child_.match(context);
   if (!this.next_) {
@@ -333,7 +561,8 @@ rr.Sequence_.prototype.match = function(context) {
           nextIterator = null;
         }
         if (!nextIterator) {
-          nextIterator = this.next_.match(currentChildValue['value']['context']);
+          nextIterator = this.next_.match(
+              currentChildValue['value']['context']);
         }
         var nextAppendValue = nextIterator.next();
         if (nextAppendValue['done']) {
@@ -347,28 +576,48 @@ rr.Sequence_.prototype.match = function(context) {
             'nodes': currentChildValue['value']['nodes'].concat(
                 nextAppendValue['value']['nodes'])
           }
-        }
+        };
       }
     }.bind(this)
-  }
+  };
 };
 
+
+/**
+ * @return {rr.Sequence_}
+ */
 rr.Sequence = function() {
   return new rr.Sequence_(Array.prototype.slice.call(arguments));
 };
 
 
 
+/**
+ * @constructor
+ *
+ * @param {Object.<string, rr.typeMatcher>} rules
+ * @param {string} input
+ * @param {number} inputIndex
+ */
 rr.Context = function(rules, input, inputIndex) {
   this.rules = rules;
   this.input = input;
   this.inputIndex = inputIndex || 0;
 };
 
+
+/**
+ * @return {rr.Context}
+ */
 rr.Context.prototype.copy = function() {
   return new rr.Context(this.rules, this.input, this.inputIndex);
 };
 
+
+/**
+ * @param {number} numChars
+ * @return {string}
+ */
 rr.Context.prototype.stringAfter = function(numChars) {
   if (numChars == null) {
     numChars = this.remaining();
@@ -376,6 +625,11 @@ rr.Context.prototype.stringAfter = function(numChars) {
   return this.input.slice(this.inputIndex, this.inputIndex + numChars);
 };
 
+
+/**
+ * @param {number} numChars
+ * @return {string}
+ */
 rr.Context.prototype.stringBefore = function(numChars) {
   var start = this.inputIndex - numChars;
   if (start < 0) {
@@ -385,18 +639,35 @@ rr.Context.prototype.stringBefore = function(numChars) {
   return this.input.slice(start, numChars);
 };
 
+
+/**
+ * @return {boolean}
+ */
 rr.Context.prototype.atStart = function() {
   return this.inputIndex == 0;
 };
 
+
+/**
+ * @return {boolean}
+ */
 rr.Context.prototype.atEnd = function() {
   return this.inputIndex == this.input.length;
 };
 
+
+/**
+ * @return {number}
+ */
 rr.Context.prototype.remaining = function() {
   return this.input.length - this.inputIndex;
 };
 
+
+/**
+ * @param {number} numChars
+ * @return {rr.Context}
+ */
 rr.Context.prototype.advance = function(numChars) {
   var context = this.copy();
   context.inputIndex += numChars;
