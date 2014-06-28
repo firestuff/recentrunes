@@ -488,7 +488,7 @@ rr.StartOfLine.cache = new rr.StartOfLine_();
  * @private
  */
 rr.ZeroOrMore_ = function(child) {
-  this.child_ = child;
+  this.pair_ = rr.SequentialPair(child, this);
 };
 
 
@@ -497,19 +497,37 @@ rr.ZeroOrMore_ = function(child) {
  * @return {rr.typeIterator}
  */
 rr.ZeroOrMore_.prototype.match = function(context) {
-  var nodes = [];
-  while (!context.atEnd()) {
-    var next = this.child_.match(context).next();
-    if (next['done']) {
-      break;
-    }
-    context = next['value']['context'];
-    Array.prototype.push.apply(nodes, next['value']['nodes']);
-  }
-  return rr.iterableFromArray_([{
-    'context': context,
-    'nodes': nodes
-  }]);
+  // Yield:
+  // 1) The results of SequentialPair(child, this)
+  // 2) An empty result
+  // 3) Done
+  //
+  // We must check for results from 1 that don't reduce context.remaining();
+  // that means infinite recursion.
+
+  var iterator = this.pair_.match(context);
+  return {
+    'next': function() {
+      if (!iterator) {
+        return { 'done': true };
+      }
+      var next = iterator.next();
+      if (next['done']) {
+        iterator = null;
+        return {
+          'done': false,
+          'value': {
+            'context': context,
+            'nodes': []
+          }
+        };
+      }
+      if (next['value']['context'].remaining() == context.remaining()) {
+        throw "Child of ZeroOrMore didn't consume input; grammar bug?";
+      }
+      return next;
+    }.bind(this)
+  };
 };
 
 
@@ -679,6 +697,9 @@ rr.Context.prototype.remaining = function() {
  * @return {rr.Context}
  */
 rr.Context.prototype.advance = function(numChars) {
+  if (!numChars) {
+    throw "Context.advance(0) called";
+  }
   var context = this.copy();
   context.inputIndex += numChars;
   return context;
