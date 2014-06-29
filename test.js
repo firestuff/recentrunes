@@ -11,3 +11,15 @@ QUnit.test('Simple', function(assert) {
       'How about some <b>bold and &lt;i&gt;bold italic&lt;/i&gt;</b>.\n' +
       'I would also love some nowiki &lt;b&gt;foo&lt;/b&gt;');
 });
+
+
+QUnit.test('ZeroOrMore', function(assert) {
+  assert.expect(1);
+  var rules = {
+    'test': rr.Node('test', rr.ZeroOrMore(rr.MultiLineText()))
+  };
+  var context = new rr.Context(rules, 'foobar');
+  var iterable = context.rules['test'].match(context);
+  assert.equal(iterable.next().value.nodes[0].outerHTML,
+    '<test>foobar</test>');
+});

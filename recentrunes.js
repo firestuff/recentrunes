@@ -39,7 +39,6 @@ rr.iterableFromArray_ = function(arr) {
 };
 
 
-
 /**
  * @constructor
  *
@@ -56,7 +55,6 @@ rr.Literal_ = function(value) {
  * @return {rr.typeIterator}
  */
 rr.Literal_.prototype.match = function(context) {
-  console.log('Literal.match:', this.value_);
   if (context.stringAfter(this.value_.length) == this.value_) {
     return rr.iterableFromArray_([{
       'context': context.advance(this.value_.length),
@@ -102,7 +100,6 @@ rr.Ref_ = function(key) {
  * @return {rr.typeIterator}
  */
 rr.Ref_.prototype.match = function(context) {
-  console.log('Ref.match:', this.key_);
   return context.rules[this.key_].match(context);
 };
 
@@ -143,11 +140,9 @@ rr.Node_ = function(name, child) {
  * @return {rr.typeIterator}
  */
 rr.Node_.prototype.match = function(context) {
-  console.log('Node.match');
   var iterator = this.child_.match(context);
   return {
     'next': function() {
-      console.log('Node.next');
       var next = iterator.next();
       if (next['done']) {
         return { 'done': true };
@@ -195,7 +190,6 @@ rr.EndOfLine_ = function() {
  * @return {rr.typeIterator}
  */
 rr.EndOfLine_.prototype.match = function(context) {
-  console.log('EndOfLine.match');
   if (context.atEnd()) {
     return rr.iterableFromArray_([{
       'context': context,
@@ -248,7 +242,6 @@ rr.EndOfText_ = function() {
  * @return {rr.typeIterator}
  */
 rr.EndOfText_.prototype.match = function(context) {
-  console.log('EndOfText.match');
   if (context.atEnd()) {
     return rr.iterableFromArray_([{
       'context': context,
@@ -290,11 +283,9 @@ rr.MultiLineText_ = function() {
  * @return {rr.typeIterator}
  */
 rr.MultiLineText_.prototype.match = function(context) {
-  console.log('MultiLineText.match');
   var i = 1;
   return {
     'next': function() {
-      console.log('MultiLineText.next:', i);
       if (i <= context.remaining()) {
         var newNode = document.createTextNode(context.stringAfter(i));
         var ret = {
@@ -346,24 +337,19 @@ rr.Or_ = function(options) {
  * @return {rr.typeIterator}
  */
 rr.Or_.prototype.match = function(context) {
-  console.log('Or.match');
   var optionIndex = 0;
   var lastIterator = null;
   return {
     'next': function() {
-      console.log('Or.next');
       while (true) {
         if (lastIterator) {
-          console.log('Or.next: still consuming child iterator', optionIndex);
           var next = lastIterator.next();
           if (!next['done']) {
             return next;
           }
         }
-        console.log('Or.next: moving on to next option', optionIndex);
         var option = this.options_[optionIndex++];
         if (!option) {
-          console.log('Or.next: returning done');
           return { 'done': true };
         }
         lastIterator = option.match(context);
@@ -396,11 +382,9 @@ rr.SingleLineText_ = function() {
  * @return {rr.typeIterator}
  */
 rr.SingleLineText_.prototype.match = function(context) {
-  console.log('SingleLineText.match');
   var i = 1;
   return {
     'next': function() {
-      console.log('SingleLineText.next');
       if (i <= context.remaining()) {
         var newString = context.stringAfter(i);
         if (newString.indexOf('\n') != -1) {
@@ -454,7 +438,6 @@ rr.StartOfLine_ = function() {
  * @return {rr.typeIterator}
  */
 rr.StartOfLine_.prototype.match = function(context) {
-  console.log('StartOfLine.match');
   if (context.atStart()) {
     return rr.iterableFromArray_([{
       'context': context,
@@ -509,7 +492,6 @@ rr.ZeroOrMore_ = function(child) {
  * @return {rr.typeIterator}
  */
 rr.ZeroOrMore_.prototype.match = function(context) {
-  console.log('ZeroOrMore.match');
   // Yield:
   // 1) The results of SequentialPair(child, this)
   // 2) An empty result
@@ -521,7 +503,6 @@ rr.ZeroOrMore_.prototype.match = function(context) {
   var iterator = this.pair_.match(context);
   return {
     'next': function() {
-      console.log('ZeroOrMore.next');
       if (!iterator) {
         return { 'done': true };
       }
@@ -573,13 +554,11 @@ rr.SequentialPair_ = function(child1, child2) {
  * @return {rr.typeIterator}
  */
 rr.SequentialPair_.prototype.match = function(context) {
-  console.log('SequentialPair.match');
   var child1Iterator = this.child1_.match(context);
   var child1Value = null;
   var child2Iterator = null;
   return {
     'next': function() {
-      console.log('SequentialPair.next');
       while (true) {
         if (!child1Value) {
           child1Value = child1Iterator.next();
@@ -718,6 +697,5 @@ rr.Context.prototype.advance = function(numChars) {
   }
   var context = this.copy();
   context.inputIndex += numChars;
-  console.log('New context: ', context.stringAfter());
   return context;
 };
