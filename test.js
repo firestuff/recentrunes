@@ -3,7 +3,7 @@ QUnit.test('Simple', function(assert) {
   var context = new rr.Context(mediawiki,
       '=== Heading ===\n' +
       'This is a wiki doc.\n' +
-      "How about some '''bold and <i>bold italic</i>'''.\n" +
+      "How about some '''bold and ''bold italic'''''.\n" +
       'I would also love some <nowiki>nowiki <b>foo</b></nowiki>');
   var iterable = context.rules['wikidoc'].match(context);
   assert.equal(iterable.next().value.nodes[0].innerHTML,
