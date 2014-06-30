@@ -612,7 +612,6 @@ rr.ZeroOrMore = function(child) {
 /* ============ Convenience factories ============ */
 
 
-
 /**
  * @return {rr.SequentialPair_|rr.typeMatcher}
  */
