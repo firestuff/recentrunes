@@ -260,7 +260,13 @@ var mediawiki = {
 
       rr.SingleLineText()),
 
-  'wikidoc': rr.Node('wikidoc', rr.Sequence(
+  'paragraph': rr.Node('p', rr.Sequence(
       rr.ZeroOrMore(rr.Ref('multiline-wikichunk')),
+      rr.Or(
+        rr.Sequence(rr.EndOfLine(), rr.Literal('\n')),
+        rr.EndOfText()))),
+
+  'wikidoc': rr.Node('wikidoc', rr.Sequence(
+      rr.ZeroOrMore(rr.Ref('paragraph')),
       rr.EndOfText()))
 };
