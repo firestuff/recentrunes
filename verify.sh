@@ -13,4 +13,4 @@ curl \
 echo
 
 gjslint --strict recentrunes.js
-gjslint --strict --nojsdoc test.js
+gjslint --strict --nojsdoc test.js grammars/mediawiki.js
