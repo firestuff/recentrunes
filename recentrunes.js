@@ -50,6 +50,53 @@ rr.iterableFromArray_ = function(arr) {
 /**
  * @constructor
  *
+ * @param {string} chars
+ * @private
+ */
+rr.CharExcept_ = function(chars) {
+  this.chars_ = chars;
+};
+
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
+rr.CharExcept_.prototype.match = function(context) {
+  var c = context.stringAfter(1);
+  if (c && this.chars_.indexOf(c) == -1) {
+    return rr.iterableFromArray_([{
+      'context': context.advance(1),
+      'nodes': [document.createTextNode(c)]
+    }]);
+  } else {
+    return rr.iterableFromArray_([]);
+  }
+};
+
+
+/**
+ * @param {string} chars
+ * @return {rr.CharExcept_}
+ */
+rr.CharExcept = function(chars) {
+  return (rr.CharExcept.cache_[chars] ||
+          (rr.CharExcept.cache_[chars] = new rr.CharExcept_(chars)));
+};
+
+
+/**
+ * @type {Object.<string, rr.CharExcept_>}
+ * @const
+ * @private
+ */
+rr.CharExcept.cache_ = {};
+
+
+
+/**
+ * @constructor
+ *
  * @private
  */
 rr.EndOfLine_ = function() {
@@ -87,15 +134,16 @@ rr.EndOfLine_.prototype.match = function(context) {
  * @return {rr.EndOfLine_}
  */
 rr.EndOfLine = function() {
-  return rr.EndOfLine.cache;
+  if (!rr.EndOfLine.cache_) {
+    /**
+      * @type {rr.EndOfLine_}
+      * @const
+      * @private
+      */
+    rr.EndOfLine.cache_ = new rr.EndOfLine_();
+  }
+  return rr.EndOfLine.cache_;
 };
-
-
-/**
- * @type {rr.EndOfLine_}
- * @const
- */
-rr.EndOfLine.cache = new rr.EndOfLine_();
 
 
 
@@ -128,15 +176,15 @@ rr.EndOfText_.prototype.match = function(context) {
  * @return {rr.EndOfText_}
  */
 rr.EndOfText = function() {
-  return rr.EndOfText.cache;
+  if (!rr.EndOfText.cache_) {
+    /**
+     * @type {rr.EndOfText_}
+     * @const
+     */
+    rr.EndOfText.cache_ = new rr.EndOfText_();
+  }
+  return rr.EndOfText.cache_;
 };
-
-
-/**
- * @type {rr.EndOfText_}
- * @const
- */
-rr.EndOfText.cache = new rr.EndOfText_();
 
 
 
@@ -172,68 +220,17 @@ rr.Literal_.prototype.match = function(context) {
  * @return {rr.Literal_}
  */
 rr.Literal = function(value) {
-  return (rr.Literal.cache[value] ||
-          (rr.Literal.cache[value] = new rr.Literal_(value)));
+  return (rr.Literal.cache_[value] ||
+          (rr.Literal.cache_[value] = new rr.Literal_(value)));
 };
 
 
 /**
  * @type {Object.<string, rr.Literal_>}
  * @const
- */
-rr.Literal.cache = {};
-
-
-
-/**
- * @constructor
- *
  * @private
  */
-rr.MultiLineText_ = function() {
-};
-
-
-/**
- * @param {rr.Context} context
- * @return {rr.typeIterator}
- */
-rr.MultiLineText_.prototype.match = function(context) {
-  var i = 1;
-  return {
-    'next': function() {
-      if (i <= context.remaining()) {
-        var newNode = document.createTextNode(context.stringAfter(i));
-        var ret = {
-          'done': false,
-          'value': {
-            'nodes': [newNode],
-            'context': context.advance(i)
-          }
-        };
-        i++;
-        return ret;
-      } else {
-        return { 'done': true };
-      }
-    }.bind(this)
-  };
-};
-
-
-/**
- * @return {rr.MultiLineText_}
- */
-rr.MultiLineText = function() {
-  return rr.MultiLineText.cache;
-};
-
-
-/**
- * @type {rr.MultiLineText_}
- * @const
- */
-rr.MultiLineText.cache = new rr.MultiLineText_();
+rr.Literal.cache_ = {};
 
 
 
@@ -363,16 +360,17 @@ rr.Ref_.prototype.match = function(context) {
  * @return {rr.Ref_}
  */
 rr.Ref = function(key) {
-  return (rr.Ref.cache[key] ||
-          (rr.Ref.cache[key] = new rr.Ref_(key)));
+  return (rr.Ref.cache_[key] ||
+          (rr.Ref.cache_[key] = new rr.Ref_(key)));
 };
 
 
 /**
  * @type {Object.<string, rr.Ref_>}
  * @const
+ * @private
  */
-rr.Ref.cache = {};
+rr.Ref.cache_ = {};
 
 
 
@@ -446,62 +444,6 @@ rr.SequentialPair = function(child1, child2) {
  *
  * @private
  */
-rr.SingleLineText_ = function() {
-};
-
-
-/**
- * @param {rr.Context} context
- * @return {rr.typeIterator}
- */
-rr.SingleLineText_.prototype.match = function(context) {
-  var i = 1;
-  return {
-    'next': function() {
-      if (i <= context.remaining()) {
-        var newString = context.stringAfter(i);
-        if (newString.indexOf('\n') != -1) {
-          return { 'done': true };
-        }
-        var newNode = document.createTextNode(newString);
-        var ret = {
-          'done': false,
-          'value': {
-            'nodes': [newNode],
-            'context': context.advance(i)
-          }
-        };
-        i++;
-        return ret;
-      } else {
-        return {'done': true };
-      }
-    }.bind(this)
-  };
-};
-
-
-/**
- * @return {rr.SingleLineText_}
- */
-rr.SingleLineText = function() {
-  return rr.SingleLineText.cache;
-};
-
-
-/**
- * @type {rr.SingleLineText_}
- * @const
- */
-rr.SingleLineText.cache = new rr.SingleLineText_();
-
-
-
-/**
- * @constructor
- *
- * @private
- */
 rr.StartOfLine_ = function() {
 };
 
@@ -537,15 +479,15 @@ rr.StartOfLine_.prototype.match = function(context) {
  * @return {rr.StartOfLine_}
  */
 rr.StartOfLine = function() {
-  return rr.StartOfLine.cache;
+  if (!rr.StartOfLine.cache_) {
+    /**
+     * @type {rr.StartOfLine_}
+     * @const
+     */
+    rr.StartOfLine.cache_ = new rr.StartOfLine_();
+  }
+  return rr.StartOfLine.cache_;
 };
-
-
-/**
- * @type {rr.StartOfLine_}
- * @const
- */
-rr.StartOfLine.cache = new rr.StartOfLine_();
 
 
 
@@ -613,6 +555,47 @@ rr.ZeroOrMore = function(child) {
 
 
 /**
+ * @return {rr.CharExcept_}
+ */
+rr.Char = function() {
+  if (!rr.Char.cache_) {
+    /**
+     * @type {rr.CharExcept_}
+     * @const
+     * @private
+     */
+    rr.Char.cache_ = rr.CharExcept('');
+  }
+  return rr.Char.cache_;
+};
+
+
+/**
+ * @return {rr.SequentialPair_}
+ */
+rr.MultiLineText = function() {
+  if (!rr.MultiLineText.cache_) {
+    /**
+     * @type {rr.SequentialPair_}
+     * @const
+     * @private
+     */
+    rr.MultiLineText.cache_ = rr.OneOrMore(rr.Char());
+  }
+  return rr.MultiLineText.cache_;
+};
+
+
+/**
+ * @param {rr.typeMatcher} child
+ * @return {rr.SequentialPair_}
+ */
+rr.OneOrMore = function(child) {
+  return rr.SequentialPair(child, rr.ZeroOrMore(child));
+};
+
+
+/**
  * @return {rr.SequentialPair_|rr.typeMatcher}
  */
 rr.Sequence = function() {
@@ -623,6 +606,22 @@ rr.Sequence = function() {
   return rr.SequentialPair(
       children[0],
       rr.Sequence.apply(null, children.slice(1)));
+};
+
+
+/**
+ * @return {rr.SequentialPair_}
+ */
+rr.SingleLineText = function() {
+  if (!rr.SingleLineText.cache_) {
+    /**
+     * @type {rr.SequentialPair_}
+     * @const
+     * @private
+     */
+    rr.SingleLineText.cache_ = rr.OneOrMore(rr.CharExcept('\n'));
+  }
+  return rr.SingleLineText.cache_;
 };
 
 
