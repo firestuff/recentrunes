@@ -108,17 +108,17 @@ var mediawiki = {
       rr.Ref('multiline-wikichunk'),
       rr.Literal("'''''"))),
   'multiline-blockquote': rr.Node('blockquote', rr.Sequence(
-      rr.Literal("<blockquote>"),
+      rr.Literal('<blockquote>'),
       rr.Ref('multiline-wikichunk'),
-      rr.Literal("</blockquote>"))),
+      rr.Literal('</blockquote>'))),
   'multiline-code': rr.Node('code', rr.Sequence(
-      rr.Literal("<code>"),
+      rr.Literal('<code>'),
       rr.Ref('multiline-wikichunk'),
-      rr.Literal("</code>"))),
+      rr.Literal('</code>'))),
   'multiline-comment': rr.Node('comment', rr.Sequence(
-      rr.Literal("<!-- "),
+      rr.Literal('<!-- '),
       rr.MultiLineText(),
-      rr.Literal(" -->"))),
+      rr.Literal(' -->'))),
   'multiline-del1': rr.Node('del', rr.Sequence(
       rr.Literal('<del>'),
       rr.Ref('multiline-wikichunk'),
@@ -136,9 +136,9 @@ var mediawiki = {
       rr.MultiLineText(),
       rr.Literal('</nowiki>')),
   'multiline-pre': rr.Node('pre', rr.Sequence(
-      rr.Literal("<pre>"),
+      rr.Literal('<pre>'),
       rr.MultiLineText(),
-      rr.Literal("</pre>"))),
+      rr.Literal('</pre>'))),
   'multiline-tt': rr.Node('tt', rr.Sequence(
       rr.Literal('<tt>'),
       rr.Ref('multiline-wikichunk'),
@@ -161,13 +161,13 @@ var mediawiki = {
       rr.Ref('singleline-wikichunk'),
       rr.Literal("'''''"))),
   'singleline-code': rr.Node('code', rr.Sequence(
-      rr.Literal("<code>"),
+      rr.Literal('<code>'),
       rr.Ref('singleline-wikichunk'),
-      rr.Literal("</code>"))),
+      rr.Literal('</code>'))),
   'singleline-comment': rr.Node('comment', rr.Sequence(
-      rr.Literal("<!-- "),
+      rr.Literal('<!-- '),
       rr.SingleLineText(),
-      rr.Literal(" -->"))),
+      rr.Literal(' -->'))),
   'singleline-del1': rr.Node('del', rr.Sequence(
       rr.Literal('<del>'),
       rr.Ref('singleline-wikichunk'),
@@ -185,9 +185,9 @@ var mediawiki = {
       rr.MultiLineText(),
       rr.Literal('</nowiki>')),
   'singleline-pre': rr.Node('pre', rr.Sequence(
-      rr.Literal("<pre>"),
+      rr.Literal('<pre>'),
       rr.SingleLineText(),
-      rr.Literal("</pre>"))),
+      rr.Literal('</pre>'))),
   'singleline-tt': rr.Node('tt', rr.Sequence(
       rr.Literal('<tt>'),
       rr.Ref('singleline-wikichunk'),
@@ -224,8 +224,8 @@ var mediawiki = {
       rr.Ref('list-ulli2'),
       rr.Ref('list-ulli3'),
 
-      rr.Ref('multiline-b'),
       rr.Ref('multiline-bi'),
+      rr.Ref('multiline-b'),
       rr.Ref('multiline-blockquote'),
       rr.Ref('multiline-code'),
       rr.Ref('multiline-comment'),
@@ -243,8 +243,8 @@ var mediawiki = {
       rr.MultiLineText()),
 
   'singleline-wikichunk': rr.Or(
-      rr.Ref('singleline-b'),
       rr.Ref('singleline-bi'),
+      rr.Ref('singleline-b'),
       rr.Ref('singleline-code'),
       rr.Ref('singleline-comment'),
       rr.Ref('singleline-del1'),
