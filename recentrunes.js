@@ -493,22 +493,18 @@ rr.ZeroOrMore_ = function(child) {
  */
 rr.ZeroOrMore_.prototype.match = function(context) {
   // Yield:
-  // 1) The results of SequentialPair(child, this)
-  // 2) An empty result
+  // 1) An empty result
+  // 2) The results of SequentialPair(child, this)
   // 3) Done
   //
-  // We must check for results from 1 that don't reduce context.remaining();
+  // We must check for results from 2 that don't reduce context.remaining();
   // that means infinite recursion.
 
-  var iterator = this.pair_.match(context);
+  var iterator = null;
   return {
     'next': function() {
       if (!iterator) {
-        return { 'done': true };
-      }
-      var next = iterator.next();
-      if (next['done']) {
-        iterator = null;
+        iterator = this.pair_.match(context);
         return {
           'done': false,
           'value': {
@@ -516,6 +512,10 @@ rr.ZeroOrMore_.prototype.match = function(context) {
             'nodes': []
           }
         };
+      }
+      var next = iterator.next();
+      if (next['done']) {
+        return { 'done': true };
       }
       if (next['value']['context'].remaining() == context.remaining()) {
         throw "Child of ZeroOrMore didn't consume input; grammar bug?";

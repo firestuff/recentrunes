@@ -23,5 +23,5 @@ var mediawiki = {
       rr.Ref('nowiki'),
       rr.Ref('text')
    ),
-  'wikidoc': rr.Node('wikidoc', rr.ZeroOrMore(rr.Ref('wikichunk'))),
+  'wikidoc': rr.Node('wikidoc', rr.Sequence(rr.ZeroOrMore(rr.Ref('wikichunk')), rr.EndOfText())),
 };
