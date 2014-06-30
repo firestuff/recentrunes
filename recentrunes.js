@@ -483,6 +483,7 @@ rr.StartOfLine = function() {
     /**
      * @type {rr.StartOfLine_}
      * @const
+     * @private
      */
     rr.StartOfLine.cache_ = new rr.StartOfLine_();
   }
@@ -674,7 +675,7 @@ rr.Context.prototype.stringBefore = function(numChars) {
     numChars += start;
     start = 0;
   }
-  return this.input.slice(start, numChars);
+  return this.input.slice(start, start + numChars);
 };
 
 
