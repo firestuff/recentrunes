@@ -17,10 +17,10 @@ QUnit.test('ZeroOrMore', function(assert) {
   assert.expect(1);
   var rules = {
     'test': rr.Node('test',
-      rr.Sequence(rr.ZeroOrMore(rr.MultiLineText()), rr.EndOfText()))
+        rr.Sequence(rr.ZeroOrMore(rr.MultiLineText()), rr.EndOfText()))
   };
   var context = new rr.Context(rules, 'foobar');
   var iterable = context.rules['test'].match(context);
   assert.equal(iterable.next().value.nodes[0].outerHTML,
-    '<test>foobar</test>');
+      '<test>foobar</test>');
 });

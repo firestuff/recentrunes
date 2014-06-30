@@ -1,6 +1,9 @@
 var rr = {};
 
 
+/* ============ typedefs ============ */
+
+
 /**
  * @typedef {{done: boolean,
  *            value: *}}
@@ -39,140 +42,8 @@ rr.iterableFromArray_ = function(arr) {
 };
 
 
-/**
- * @constructor
- *
- * @param {string} value
- * @private
- */
-rr.Literal_ = function(value) {
-  this.value_ = value;
-};
 
-
-/**
- * @param {rr.Context} context
- * @return {rr.typeIterator}
- */
-rr.Literal_.prototype.match = function(context) {
-  if (context.stringAfter(this.value_.length) == this.value_) {
-    return rr.iterableFromArray_([{
-      'context': context.advance(this.value_.length),
-      'nodes': []
-    }]);
-  } else {
-    return rr.iterableFromArray_([]);
-  }
-};
-
-
-/**
- * @param {string} value
- * @return {rr.Literal_}
- */
-rr.Literal = function(value) {
-  return (rr.Literal.cache[value] ||
-          (rr.Literal.cache[value] = new rr.Literal_(value)));
-};
-
-
-/**
- * @type {Object.<string, rr.Literal_>}
- * @const
- */
-rr.Literal.cache = {};
-
-
-
-/**
- * @constructor
- *
- * @param {string} key
- * @private
- */
-rr.Ref_ = function(key) {
-  this.key_ = key;
-};
-
-
-/**
- * @param {rr.Context} context
- * @return {rr.typeIterator}
- */
-rr.Ref_.prototype.match = function(context) {
-  return context.rules[this.key_].match(context);
-};
-
-
-/**
- * @param {string} key
- * @return {rr.Ref_}
- */
-rr.Ref = function(key) {
-  return (rr.Ref.cache[key] ||
-          (rr.Ref.cache[key] = new rr.Ref_(key)));
-};
-
-
-/**
- * @type {Object.<string, rr.Ref_>}
- * @const
- */
-rr.Ref.cache = {};
-
-
-
-/**
- * @constructor
- *
- * @param {string} name
- * @param {rr.typeMatcher} child
- * @private
- */
-rr.Node_ = function(name, child) {
-  this.name_ = name;
-  this.child_ = child;
-};
-
-
-/**
- * @param {rr.Context} context
- * @return {rr.typeIterator}
- */
-rr.Node_.prototype.match = function(context) {
-  var iterator = this.child_.match(context);
-  return {
-    'next': function() {
-      var next = iterator.next();
-      if (next['done']) {
-        return { 'done': true };
-      }
-      var node = document.createElement(this.name_);
-      var nodes = next['value']['nodes'];
-      for (var i = 0; i < nodes.length; i++) {
-        node.appendChild(nodes[i]);
-      }
-      node.normalize();
-      return {
-        'done': false,
-        'value': {
-          'context': next['value']['context'],
-          'nodes': [node]
-        }
-      };
-    }.bind(this)
-  };
-};
-
-
-/**
- * @param {string} name
- * @param {rr.typeMatcher} child
- * @return {rr.Node_}
- */
-rr.Node = function(name, child) {
-  return new rr.Node_(name, child);
-};
+/* ============ Matchers (and their factories) ============ */
 
 
 
@@ -272,6 +143,51 @@ rr.EndOfText.cache = new rr.EndOfText_();
 /**
  * @constructor
  *
+ * @param {string} value
+ * @private
+ */
+rr.Literal_ = function(value) {
+  this.value_ = value;
+};
+
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
+rr.Literal_.prototype.match = function(context) {
+  if (context.stringAfter(this.value_.length) == this.value_) {
+    return rr.iterableFromArray_([{
+      'context': context.advance(this.value_.length),
+      'nodes': []
+    }]);
+  } else {
+    return rr.iterableFromArray_([]);
+  }
+};
+
+
+/**
+ * @param {string} value
+ * @return {rr.Literal_}
+ */
+rr.Literal = function(value) {
+  return (rr.Literal.cache[value] ||
+          (rr.Literal.cache[value] = new rr.Literal_(value)));
+};
+
+
+/**
+ * @type {Object.<string, rr.Literal_>}
+ * @const
+ */
+rr.Literal.cache = {};
+
+
+
+/**
+ * @constructor
+ *
  * @private
  */
 rr.MultiLineText_ = function() {
@@ -324,6 +240,60 @@ rr.MultiLineText.cache = new rr.MultiLineText_();
 /**
  * @constructor
  *
+ * @param {string} name
+ * @param {rr.typeMatcher} child
+ * @private
+ */
+rr.Node_ = function(name, child) {
+  this.name_ = name;
+  this.child_ = child;
+};
+
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
+rr.Node_.prototype.match = function(context) {
+  var iterator = this.child_.match(context);
+  return {
+    'next': function() {
+      var next = iterator.next();
+      if (next['done']) {
+        return { 'done': true };
+      }
+      var node = document.createElement(this.name_);
+      var nodes = next['value']['nodes'];
+      for (var i = 0; i < nodes.length; i++) {
+        node.appendChild(nodes[i]);
+      }
+      node.normalize();
+      return {
+        'done': false,
+        'value': {
+          'context': next['value']['context'],
+          'nodes': [node]
+        }
+      };
+    }.bind(this)
+  };
+};
+
+
+/**
+ * @param {string} name
+ * @param {rr.typeMatcher} child
+ * @return {rr.Node_}
+ */
+rr.Node = function(name, child) {
+  return new rr.Node_(name, child);
+};
+
+
+
+/**
+ * @constructor
+ *
  * @param {Array.<rr.typeMatcher>} options
  * @private
  */
@@ -364,6 +334,109 @@ rr.Or_.prototype.match = function(context) {
  */
 rr.Or = function() {
   return new rr.Or_(Array.prototype.slice.call(arguments, 0));
+};
+
+
+
+/**
+ * @constructor
+ *
+ * @param {string} key
+ * @private
+ */
+rr.Ref_ = function(key) {
+  this.key_ = key;
+};
+
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
+rr.Ref_.prototype.match = function(context) {
+  return context.rules[this.key_].match(context);
+};
+
+
+/**
+ * @param {string} key
+ * @return {rr.Ref_}
+ */
+rr.Ref = function(key) {
+  return (rr.Ref.cache[key] ||
+          (rr.Ref.cache[key] = new rr.Ref_(key)));
+};
+
+
+/**
+ * @type {Object.<string, rr.Ref_>}
+ * @const
+ */
+rr.Ref.cache = {};
+
+
+
+/**
+ * @constructor
+ *
+ * @param {rr.typeMatcher} child1
+ * @param {rr.typeMatcher} child2
+ * @private
+ */
+rr.SequentialPair_ = function(child1, child2) {
+  this.child1_ = child1;
+  this.child2_ = child2;
+};
+
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
+rr.SequentialPair_.prototype.match = function(context) {
+  var child1Iterator = this.child1_.match(context);
+  var child1Value = null;
+  var child2Iterator = null;
+  return {
+    'next': function() {
+      while (true) {
+        if (!child1Value) {
+          child1Value = child1Iterator.next();
+          if (child1Value['done']) {
+            return { 'done': true };
+          }
+          child2Iterator = null;
+        }
+        if (!child2Iterator) {
+          child2Iterator = this.child2_.match(
+              child1Value['value']['context']);
+        }
+        var child2Value = child2Iterator.next();
+        if (child2Value['done']) {
+          child1Value = null;
+          continue;
+        }
+        return {
+          'done': false,
+          'value': {
+            'context': child2Value['value']['context'],
+            'nodes': child1Value['value']['nodes'].concat(
+                child2Value['value']['nodes'])
+          }
+        };
+      }
+    }.bind(this)
+  };
+};
+
+
+/**
+ * @param {rr.typeMatcher} child1
+ * @param {rr.typeMatcher} child2
+ * @return {rr.SequentialPair_}
+ */
+rr.SequentialPair = function(child1, child2) {
+  return new rr.SequentialPair_(child1, child2);
 };
 
 
@@ -536,68 +609,8 @@ rr.ZeroOrMore = function(child) {
 
 
 
-/**
- * @constructor
- *
- * @param {rr.typeMatcher} child1
- * @param {rr.typeMatcher} child2
- * @private
- */
-rr.SequentialPair_ = function(child1, child2) {
-  this.child1_ = child1;
-  this.child2_ = child2;
-};
+/* ============ Convenience factories ============ */
 
-
-/**
- * @param {rr.Context} context
- * @return {rr.typeIterator}
- */
-rr.SequentialPair_.prototype.match = function(context) {
-  var child1Iterator = this.child1_.match(context);
-  var child1Value = null;
-  var child2Iterator = null;
-  return {
-    'next': function() {
-      while (true) {
-        if (!child1Value) {
-          child1Value = child1Iterator.next();
-          if (child1Value['done']) {
-            return { 'done': true };
-          }
-          child2Iterator = null;
-        }
-        if (!child2Iterator) {
-          child2Iterator = this.child2_.match(
-              child1Value['value']['context']);
-        }
-        var child2Value = child2Iterator.next();
-        if (child2Value['done']) {
-          child1Value = null;
-          continue;
-        }
-        return {
-          'done': false,
-          'value': {
-            'context': child2Value['value']['context'],
-            'nodes': child1Value['value']['nodes'].concat(
-                child2Value['value']['nodes'])
-          }
-        };
-      }
-    }.bind(this)
-  };
-};
-
-
-/**
- * @param {rr.typeMatcher} child1
- * @param {rr.typeMatcher} child2
- * @return {rr.SequentialPair_}
- */
-rr.SequentialPair = function(child1, child2) {
-  return new rr.SequentialPair_(child1, child2);
-};
 
 
 /**
@@ -612,6 +625,10 @@ rr.Sequence = function() {
       children[0],
       rr.Sequence.apply(null, children.slice(1)));
 };
+
+
+
+/* ============ Scaffolding ============ */
 
 
 
@@ -693,7 +710,7 @@ rr.Context.prototype.remaining = function() {
  */
 rr.Context.prototype.advance = function(numChars) {
   if (!numChars) {
-    throw "Context.advance(0) called";
+    throw 'Context.advance(0) called';
   }
   var context = this.copy();
   context.inputIndex += numChars;
