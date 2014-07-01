@@ -294,3 +294,8 @@ var mediawiki = {
       rr.ZeroOrMore(rr.Ref('paragraph')),
       rr.EndOfText()))
 };
+
+
+var mediawiki_filters = {
+  'bi': rr.SplitTagAndNest('b', 'i')
+};

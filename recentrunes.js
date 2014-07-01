@@ -716,7 +716,48 @@ rr.SingleLineText = function() {
 
 
 
+/* ============ Filters ============ */
+
+
+rr.SplitTagAndNest = function() {
+  var hierarchy = Array.prototype.slice.call(arguments);
+  return function(node) {
+    var outerNode, innerNode;
+    for (var i = 0; i < hierarchy.length; i++) {
+      var newNode = document.createElement(hierarchy[i]);
+      if (i == 0) {
+        outerNode = innerNode = newNode;
+      } else {
+        innerNode.appendChild(newNode);
+        innerNode = newNode;
+      }
+    }
+    for (var i = 0; i < node.childNodes.length; i++) {
+      innerNode.appendChild(node.childNodes[i]);
+    }
+    node.parentNode.replaceChild(outerNode, node);
+  }
+};
+
+
+
 /* ============ Scaffolding ============ */
+
+
+
+/**
+ * @param {Node} node
+ * @param {Object.<string, rr.typeFilter>} filters
+ */
+rr.ApplyFilters = function(node, filters) {
+  var filter = filters[node.nodeName.toLowerCase()];
+  if (filter) {
+    filter(node);
+  }
+  for (var i = 0; i < node.childNodes.length; i++) {
+    rr.ApplyFilters(node.childNodes[i], filters);
+  }
+};
 
 
 

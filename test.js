@@ -39,12 +39,12 @@ QUnit.test('Base', function(assert) {
 
   var expected = [
     '<p>This is a paragraph with many text styles. This is <i>italic</i> and ',
-    'this \nis <b>bold</b>; this is <bi>both</bi>. This is <u>underline</u> ',
-    'as is \n<u>this</u>. This is <u><bi>underlined, bold and italic</bi>',
-    '</u>. \nThis is <del>strikethrough</del>, as is <del>this</del>. Source ',
-    '\ncode looks like <code>this</code>. Fixed width text looks like \n',
-    '<tt>this</tt>. <pre>This sentence is inline pre-formatted, which stops \n',
-    "'''''this from being bold and italic.'''''</pre> We can also \nstop ",
+    'this \nis <b>bold</b>; this is <b><i>both</i></b>. This is <u>underline',
+    '</u> as is \n<u>this</u>. This is <u><b><i>underlined, bold and italic',
+    '</i></b></u>. \nThis is <del>strikethrough</del>, as is <del>this</del>. ',
+    'Source \ncode looks like <code>this</code>. Fixed width text looks like ',
+    '\n<tt>this</tt>. <pre>This sentence is inline pre-formatted, which stops',
+    " \n'''''this from being bold and italic.'''''</pre> We can also \nstop ",
     '&lt;u&gt;this from being underlined&lt;/u&gt;, or just try \n',
     '&lt;pre&gt;interrupting cow style.&lt;/pre&gt;<blockquote>This is a ',
     'blockquote</blockquote></p><p><h2>Header 2</h2><h3>Header 3 <i>with ',
@@ -61,7 +61,9 @@ QUnit.test('Base', function(assert) {
 
   var context = new rr.Context(mediawiki, content);
   var iterable = context.rules['wikidoc'].match(context);
-  assert.equal(iterable.next().value.nodes[0].innerHTML, expected);
+  var rootNode = iterable.next().value.nodes[0];
+  rr.ApplyFilters(rootNode, mediawiki_filters);
+  assert.equal(rootNode.innerHTML, expected);
 });
 
 QUnit.test('singleline-wikichunk', function(assert) {
