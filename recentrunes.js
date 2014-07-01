@@ -576,7 +576,8 @@ rr.ZeroOrMore_.prototype.match = function(context) {
         return { 'done': true };
       }
       if (next['value']['context'].remaining() == context.remaining()) {
-        throw "Child of ZeroOrMore didn't consume input; grammar bug?";
+        throw new Error(
+            "Child of ZeroOrMore didn't consume input; grammar bug?");
       }
       return next;
     }.bind(this)
@@ -751,7 +752,7 @@ rr.Context.prototype.remaining = function() {
  */
 rr.Context.prototype.advance = function(numChars) {
   if (!numChars) {
-    throw 'Context.advance(0) called';
+    throw new Error('Context.advance(0) called');
   }
   var context = this.copy();
   context.inputIndex += numChars;
