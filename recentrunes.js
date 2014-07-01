@@ -180,10 +180,56 @@ rr.EndOfText = function() {
     /**
      * @type {rr.EndOfText_}
      * @const
+     * @private
      */
     rr.EndOfText.cache_ = new rr.EndOfText_();
   }
   return rr.EndOfText.cache_;
+};
+
+
+
+/**
+ * @constructor
+ *
+ * @param {rr.typeMatcher} child
+ * @private
+ */
+rr.Hidden_ = function(child) {
+  this.child_ = child;
+};
+
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
+rr.Hidden_.prototype.match = function(context) {
+  var iterator = this.child_.match(context);
+  return {
+    'next': function() {
+      var next = iterator.next();
+      if (next['done']) {
+        return { 'done': true };
+      }
+      return {
+        'done': false,
+        'value': {
+          'context': next['value']['context'],
+          'nodes': []
+        }
+      };
+    }.bind(this)
+  };
+};
+
+
+/**
+ * @param {rr.typeMatcher} child
+ * @return {rr.Hidden_}
+ */
+rr.Hidden = function(child) {
+  return new rr.Hidden_(child);
 };
 
 

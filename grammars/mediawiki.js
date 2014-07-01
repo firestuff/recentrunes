@@ -121,7 +121,7 @@ var mediawiki = {
       rr.Literal('<code>'),
       rr.Ref('multiline-wikichunk'),
       rr.Literal('</code>'))),
-  'multiline-comment': rr.Node('comment', rr.Sequence(
+  'multiline-comment': rr.Hidden(rr.Sequence(
       rr.Literal('<!-- '),
       rr.MultiLineText(),
       rr.Literal(' -->'))),
@@ -185,7 +185,7 @@ var mediawiki = {
       rr.Literal('<code>'),
       rr.Ref('singleline-wikichunk'),
       rr.Literal('</code>'))),
-  'singleline-comment': rr.Node('comment', rr.Sequence(
+  'singleline-comment': rr.Hidden(rr.Sequence(
       rr.Literal('<!-- '),
       rr.SingleLineText(),
       rr.Literal(' -->'))),
@@ -287,8 +287,8 @@ var mediawiki = {
   'paragraph': rr.Node('p', rr.Sequence(
       rr.Ref('multiline-wikichunk'),
       rr.Or(
-        rr.Sequence(rr.EndOfLine(), rr.Literal('\n')),
-        rr.EndOfText()))),
+          rr.Sequence(rr.EndOfLine(), rr.Literal('\n')),
+          rr.EndOfText()))),
 
   'wikidoc': rr.Node('wikidoc', rr.Sequence(
       rr.ZeroOrMore(rr.Ref('paragraph')),
