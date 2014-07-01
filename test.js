@@ -59,11 +59,7 @@ QUnit.test('Base', function(assert) {
     '</pre></p>'
   ].join('');
 
-  var context = new rr.Context(mediawiki, content);
-  var iterable = context.rules['wikidoc'].match(context);
-  var rootNode = iterable.next().value.nodes[0];
-  rr.ApplyFilters(rootNode, mediawiki_filters);
-  assert.equal(rootNode.innerHTML, expected);
+  assert.equal(mediawiki.parseFromString(content).innerHTML, expected);
 });
 
 QUnit.test('singleline-wikichunk', function(assert) {
@@ -78,9 +74,7 @@ QUnit.test('singleline-wikichunk', function(assert) {
     '<h3>Header 3 <i>with italics</i></h3></p>'
   ].join('');
 
-  var context = new rr.Context(mediawiki, content);
-  var iterable = context.rules['wikidoc'].match(context);
-  assert.equal(iterable.next().value.nodes[0].innerHTML, expected);
+  assert.equal(mediawiki.parseFromString(content).innerHTML, expected);
 });
 
 QUnit.test('Link', function(assert) {
@@ -94,9 +88,7 @@ QUnit.test('Link', function(assert) {
     'Test text <i>with formatting</i></a></p>'
   ].join('');
 
-  var context = new rr.Context(mediawiki, content);
-  var iterable = context.rules['wikidoc'].match(context);
-  assert.equal(iterable.next().value.nodes[0].innerHTML, expected);
+  assert.equal(mediawiki.parseFromString(content).innerHTML, expected);
 });
 
 QUnit.test('Image', function(assert) {
@@ -110,7 +102,5 @@ QUnit.test('Image', function(assert) {
     '<caption>Test image <i>with formatting</i></caption></imgtemp></p>'
   ].join('');
 
-  var context = new rr.Context(mediawiki, content);
-  var iterable = context.rules['wikidoc'].match(context);
-  assert.equal(iterable.next().value.nodes[0].innerHTML, expected);
+  assert.equal(mediawiki.parseFromString(content).innerHTML, expected);
 });

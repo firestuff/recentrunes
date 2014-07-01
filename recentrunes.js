@@ -5,6 +5,12 @@ var rr = {};
 
 
 /**
+ * @typedef {function(Node)}
+ */
+rr.typeFilter;
+
+
+/**
  * @typedef {{done: boolean,
  *            value: *}}
  */
@@ -716,10 +722,14 @@ rr.SingleLineText = function() {
 
 
 
-/* ============ Filters ============ */
+/* ============ Filter factories ============ */
 
 
-rr.SplitTagAndNest = function() {
+/**
+ * @param {...string} var_args
+ * @return {rr.typeFilter}
+ */
+rr.SplitTagAndNest = function(var_args) {
   var hierarchy = Array.prototype.slice.call(arguments);
   return function(node) {
     var outerNode, innerNode;
@@ -744,7 +754,6 @@ rr.SplitTagAndNest = function() {
 /* ============ Scaffolding ============ */
 
 
-
 /**
  * @param {Node} node
  * @param {Object.<string, rr.typeFilter>} filters
@@ -766,12 +775,12 @@ rr.ApplyFilters = function(node, filters) {
  *
  * @param {Object.<string, rr.typeMatcher>} rules
  * @param {string} input
- * @param {number} inputIndex
+ * @param {number=} opt_inputIndex
  */
-rr.Context = function(rules, input, inputIndex) {
+rr.Context = function(rules, input, opt_inputIndex) {
   this.rules = rules;
   this.input = input;
-  this.inputIndex = inputIndex || 0;
+  this.inputIndex = opt_inputIndex || 0;
 };
 
 
@@ -844,4 +853,45 @@ rr.Context.prototype.advance = function(numChars) {
   var context = this.copy();
   context.inputIndex += numChars;
   return context;
+};
+
+
+
+/**
+ * @constructor
+ *
+ * @param {Object.<string, rr.typeMatcher>} rules
+ * @param {Object.<string, rr.typeFilter>} filters
+ * @private
+ */
+rr.Parser_ = function(rules, filters) {
+  this.rules_ = rules;
+  this.filters_ = filters;
+};
+
+
+/**
+ * @param {string} input
+ * @return {?Node}
+ */
+rr.Parser_.prototype.parseFromString = function(input) {
+  var context = new rr.Context(this.rules_, input);
+  var iterable = context.rules['main'].match(context);
+  var next = iterable.next();
+  if (next['done']) {
+    return null;
+  }
+  var rootNode = next['value']['nodes'][0];
+  rr.ApplyFilters(rootNode, this.filters_);
+  return rootNode;
+};
+
+
+/**
+ * @param {Object.<string, rr.typeMatcher>} rules
+ * @param {Object.<string, rr.typeFilter>} filters
+ * @return {rr.Parser_}
+ */
+rr.Parser = function(rules, filters) {
+  return new rr.Parser_(rules, filters);
 };

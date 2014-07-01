@@ -1,4 +1,4 @@
-var mediawiki = {
+var mediawiki = rr.Parser({
   'list-blockquote1': rr.Node('blockquote', rr.Sequence(
       rr.StartOfLine(),
       rr.Literal(': '),
@@ -290,12 +290,9 @@ var mediawiki = {
           rr.Sequence(rr.EndOfLine(), rr.Literal('\n')),
           rr.EndOfText()))),
 
-  'wikidoc': rr.Node('wikidoc', rr.Sequence(
+  'main': rr.Node('wikidoc', rr.Sequence(
       rr.ZeroOrMore(rr.Ref('paragraph')),
       rr.EndOfText()))
-};
-
-
-var mediawiki_filters = {
+}, {
   'bi': rr.SplitTagAndNest('b', 'i')
-};
+});
