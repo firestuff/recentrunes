@@ -194,6 +194,48 @@ rr.EndOfText = function() {
  * @param {string} value
  * @private
  */
+rr.Insert_ = function(value) {
+  this.value_ = value;
+};
+
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
+rr.Insert_.prototype.match = function(context) {
+  return rr.iterableFromArray_([{
+    'context': context,
+    'nodes': [document.createTextNode(this.value_)]
+  }]);
+};
+
+
+/**
+ * @param {string} value
+ * @return {rr.Insert_}
+ */
+rr.Insert = function(value) {
+  return (rr.Insert.cache_[value] ||
+          (rr.Insert.cache_[value] = new rr.Insert_(value)));
+};
+
+
+/**
+ * @type {Object.<string, rr.Insert_>}
+ * @const
+ * @private
+ */
+rr.Insert.cache_ = {};
+
+
+
+/**
+ * @constructor
+ *
+ * @param {string} value
+ * @private
+ */
 rr.Literal_ = function(value) {
   this.value_ = value;
 };
