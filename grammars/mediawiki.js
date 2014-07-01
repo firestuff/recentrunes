@@ -81,7 +81,7 @@ var mediawiki = {
   'list-pre': rr.Node('pre', rr.Sequence(
       rr.StartOfLine(),
       rr.Literal(' '),
-      rr.Ref('singleline-wikichunk'),
+      rr.SingleLineText(),
       rr.EndOfLine())),
   'list-ulli1': rr.Node('ulli1', rr.Sequence(
       rr.StartOfLine(),
@@ -203,7 +203,7 @@ var mediawiki = {
 
   'special-nowikisingle': rr.Literal('<nowiki/>'),
 
-  'multiline-wikichunk': rr.Or(
+  'multiline-wikichunk': rr.ZeroOrMore(rr.Or(
       rr.Ref('list-blockquote1'),
       rr.Ref('list-blockquote2'),
       rr.Ref('list-blockquote3'),
@@ -240,9 +240,9 @@ var mediawiki = {
 
       rr.Ref('special-nowikisingle'),
 
-      rr.MultiLineText()),
+      rr.MultiLineText())),
 
-  'singleline-wikichunk': rr.Or(
+  'singleline-wikichunk': rr.ZeroOrMore(rr.Or(
       rr.Ref('singleline-bi'),
       rr.Ref('singleline-b'),
       rr.Ref('singleline-code'),
@@ -258,10 +258,10 @@ var mediawiki = {
 
       rr.Ref('special-nowikisingle'),
 
-      rr.SingleLineText()),
+      rr.SingleLineText())),
 
   'paragraph': rr.Node('p', rr.Sequence(
-      rr.ZeroOrMore(rr.Ref('multiline-wikichunk')),
+      rr.Ref('multiline-wikichunk'),
       rr.Or(
         rr.Sequence(rr.EndOfLine(), rr.Literal('\n')),
         rr.EndOfText()))),
