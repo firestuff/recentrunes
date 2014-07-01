@@ -137,6 +137,15 @@ var mediawiki = {
       rr.Literal("''"),
       rr.Ref('multiline-wikichunk'),
       rr.Literal("''"))),
+  'multiline-img': rr.Node('imgtemp', rr.Sequence(
+      rr.Literal('[[File:'),
+      rr.Node('src', rr.SingleLineText()),
+      rr.ZeroOrMore(rr.Sequence(
+          rr.Literal('|'),
+          rr.Node('option', rr.SingleLineText()))),
+      rr.Literal('|'),
+      rr.Node('caption', rr.Ref('multiline-wikichunk')),
+      rr.Literal(']]'))),
   'multiline-nowiki': rr.Sequence(
       rr.Literal('<nowiki>'),
       rr.MultiLineText(),
@@ -236,6 +245,7 @@ var mediawiki = {
       rr.Ref('list-ulli2'),
       rr.Ref('list-ulli3'),
 
+      rr.Ref('multiline-img'), // before a
       rr.Ref('multiline-a'),
       rr.Ref('multiline-bi'), // before b and i
       rr.Ref('multiline-b'),

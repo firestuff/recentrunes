@@ -97,3 +97,19 @@ QUnit.test('Link', function(assert) {
   var iterable = context.rules['wikidoc'].match(context);
   assert.equal(iterable.next().value.nodes[0].innerHTML, expected);
 });
+
+QUnit.test('Image', function(assert) {
+  assert.expect(1);
+  var content = [
+    "[[File:http://www.example.com/foo|Test image ''with formatting'']]"
+  ].join('\n');
+
+  var expected = [
+    '<p><imgtemp><src>http://www.example.com/foo</src>',
+    '<caption>Test image <i>with formatting</i></caption></imgtemp></p>'
+  ].join('');
+
+  var context = new rr.Context(mediawiki, content);
+  var iterable = context.rules['wikidoc'].match(context);
+  assert.equal(iterable.next().value.nodes[0].innerHTML, expected);
+});
