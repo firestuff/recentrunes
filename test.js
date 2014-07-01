@@ -33,7 +33,8 @@ QUnit.test('Base', function(assert) {
     ";I don't really understand what a definition is",
     ': But blockquotes are easy',
     ':: Even larger ones',
-    '::::: And really huge ones'
+    '::::: And really huge ones',
+    ' This line is pre-formatted and <del>not interpolated</del>'
   ].join('\n');
 
   var expected = [
@@ -54,10 +55,13 @@ QUnit.test('Base', function(assert) {
     '</olli1><olli2>Item 2</olli2><olli3>Item 3</olli3><olli1>Item 1c</olli1>',
     "<def>I don't really understand what a definition is</def><blockquote>",
     'But blockquotes are easy</blockquote><blockquote2>Even larger ones',
-    '</blockquote2><blockquote5>And really huge ones</blockquote5></p>'
+    '</blockquote2><blockquote5>And really huge ones</blockquote5><pre>This ',
+    'line is pre-formatted and &lt;del&gt;not interpolated&lt;/del&gt;',
+    '</pre></p>'
   ].join('');
 
   var context = new rr.Context(mediawiki, content);
   var iterable = context.rules['wikidoc'].match(context);
   assert.equal(iterable.next().value.nodes[0].innerHTML, expected);
+  console.log(expected);
 });
