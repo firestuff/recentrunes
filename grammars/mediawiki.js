@@ -1,4 +1,4 @@
-var mediawiki = rr.Parser({
+mediawiki = rr.Parser({
   'list-blockquote1': rr.Node('blockquote', rr.Sequence(
       rr.StartOfLine(),
       rr.Literal(': '),
@@ -245,9 +245,9 @@ var mediawiki = rr.Parser({
       rr.Ref('list-ulli2'),
       rr.Ref('list-ulli3'),
 
-      rr.Ref('multiline-img'), // before a
+      rr.Ref('multiline-img'),
       rr.Ref('multiline-a'),
-      rr.Ref('multiline-bi'), // before b and i
+      rr.Ref('multiline-bi'),
       rr.Ref('multiline-b'),
       rr.Ref('multiline-blockquote'),
       rr.Ref('multiline-code'),
@@ -267,7 +267,7 @@ var mediawiki = rr.Parser({
 
   'singleline-wikichunk': rr.ZeroOrMore(rr.Or(
       rr.Ref('singleline-a'),
-      rr.Ref('singleline-bi'), // before b and i
+      rr.Ref('singleline-bi'),
       rr.Ref('singleline-b'),
       rr.Ref('singleline-code'),
       rr.Ref('singleline-comment'),
