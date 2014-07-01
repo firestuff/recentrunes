@@ -99,6 +99,12 @@ var mediawiki = {
       rr.Ref('singleline-wikichunk'),
       rr.EndOfLine())),
 
+  'multiline-a': rr.Node('a', rr.Sequence(
+      rr.Literal('[['),
+      rr.Node('href', rr.SingleLineText()),
+      rr.Literal('|'),
+      rr.Ref('multiline-wikichunk'),
+      rr.Literal(']]'))),
   'multiline-b': rr.Node('b', rr.Sequence(
       rr.Literal("'''"),
       rr.Ref('multiline-wikichunk'),
@@ -152,6 +158,12 @@ var mediawiki = {
       rr.Ref('multiline-wikichunk'),
       rr.Literal('</ins>'))),
 
+  'singleline-a': rr.Node('a', rr.Sequence(
+      rr.Literal('[['),
+      rr.Node('href', rr.SingleLineText()),
+      rr.Literal('|'),
+      rr.Ref('singleline-wikichunk'),
+      rr.Literal(']]'))),
   'singleline-b': rr.Node('b', rr.Sequence(
       rr.Literal("'''"),
       rr.Ref('singleline-wikichunk'),
@@ -224,7 +236,8 @@ var mediawiki = {
       rr.Ref('list-ulli2'),
       rr.Ref('list-ulli3'),
 
-      rr.Ref('multiline-bi'),
+      rr.Ref('multiline-a'),
+      rr.Ref('multiline-bi'), // before b and i
       rr.Ref('multiline-b'),
       rr.Ref('multiline-blockquote'),
       rr.Ref('multiline-code'),
@@ -243,7 +256,8 @@ var mediawiki = {
       rr.MultiLineText())),
 
   'singleline-wikichunk': rr.ZeroOrMore(rr.Or(
-      rr.Ref('singleline-bi'),
+      rr.Ref('singleline-a'),
+      rr.Ref('singleline-bi'), // before b and i
       rr.Ref('singleline-b'),
       rr.Ref('singleline-code'),
       rr.Ref('singleline-comment'),

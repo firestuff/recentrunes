@@ -304,7 +304,7 @@ rr.Node_.prototype.match = function(context) {
       var node = document.createElement(this.name_);
       var nodes = next['value']['nodes'];
       for (var i = 0; i < nodes.length; i++) {
-        node.appendChild(nodes[i]);
+        node.appendChild(nodes[i].cloneNode(true));
       }
       node.normalize();
       return {
