@@ -8,8 +8,17 @@ class MatchResult(collections.namedtuple('MatchResult', ['context', 'nodes'])):
 
 class TextNode(object):
   def __init__(self, textContent):
+    self.nodeName = '#text'
     self.textContent = textContent
     self.previousSibling = None
+    self.childNodes = []
+
+  def cloneNode(self, deep):
+    return TextNode(self.textContent)
+
+  def __str__(self):
+    # TODO: HTML escaping
+    return self.textContent
 
 
 class Element(object):
@@ -42,18 +51,16 @@ class Element(object):
     oldNode.previousSibling = None
 
   def normalize(self):
-    # Cumbersome loop to allow modification inside
-    i = 0
-    while i < len(self.childNodes) - 1:
-      child = self.childNodes[i]
-      if isinstance(child, TextNode):
-        while (i < len(self.childNodes) - 1 and
-               isinstance(self.childNodes[i + 1], TextNode)):
-          sibling = self.childNodes[i + 1]
-          child.textContent += sibling.textContent
-          self.childNodes.remove(sibling)
-        if i < len(self.childNodes) - 1:
-          self.childNodes[i + 1].previousSibling = child
+    lastTextNode = None
+    for childNode in list(self.childNodes):
+      if isinstance(childNode, TextNode):
+        if lastTextNode:
+          lastTextNode.textContent += childNode.textContent
+          self.removeChild(childNode)
+        else:
+          lastTextNode = childNode
+      else:
+        lastTextNode = None
 
   def renameNode(self, nodeName):
     self.nodeName = nodeName
@@ -64,6 +71,20 @@ class Element(object):
   def getAttribute(self, key):
     return self.attributes[key]
 
+  def cloneNode(self, deep):
+    element = Element(self.nodeName)
+    if not deep:
+      return element
+    for childNode in self.childNodes:
+      element.appendChild(childNode.cloneNode(True))
+    for key, value in self.attributes.iteritems():
+      element.setAttribute(key, value)
+    return element
+
+  def __str__(self):
+    # TODO: attributes
+    values = map(str, self.childNodes)
+    return '<%s>%s</%s>' % (self.nodeName, ''.join(values), self.nodeName)
 
 
 # ============ Matchers ============
@@ -79,7 +100,7 @@ class CharExcept(Matcher):
 
   def match(self, context):
     c = context.stringAfter(1)
-    if c and c in self._chars:
+    if c and c not in self._chars:
       yield MatchResult(
           context.advance(1),
           [TextNode(c)])
@@ -311,6 +332,7 @@ def SplitElementAndNest(originalName, newNames):
     for childNode in node.childNodes:
       innerNode.appendChild(childNode)
     node.parentNode.replaceChild(outerNode, node)
+  return Filter
 
 
 
