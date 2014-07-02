@@ -158,7 +158,7 @@ class Insert(Matcher):
   def match(self, context):
     yield MatchResult(
         context,
-        TextNode(self.value_))
+        [TextNode(self._value)])
 
 
 class Literal(Matcher):
