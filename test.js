@@ -34,7 +34,8 @@ QUnit.test('Base', function(assert) {
     ': But blockquotes are easy',
     ':: Even larger ones',
     '::::: And really huge ones',
-    ' This line is pre-formatted and <del>not interpolated</del>'
+    ' This line is pre-formatted and <del>not interpolated</del>',
+    ' This line is also pre-formatted'
   ].join('\n');
 
   var expected = [
@@ -55,8 +56,8 @@ QUnit.test('Base', function(assert) {
     "<def>I don't really understand what a definition is</def><blockquote>",
     'But blockquotes are easy</blockquote><blockquote2>Even larger ones',
     '</blockquote2><blockquote5>And really huge ones</blockquote5><pre>This ',
-    'line is pre-formatted and &lt;del&gt;not interpolated&lt;/del&gt;',
-    '</pre></p>'
+    'line is pre-formatted and &lt;del&gt;not interpolated&lt;/del&gt;\nThis ',
+    'line is also pre-formatted\n</pre></p>'
   ].join('');
 
   assert.equal(mediawiki.parseFromString(content).innerHTML, expected);
@@ -91,15 +92,15 @@ QUnit.test('Link', function(assert) {
   assert.equal(mediawiki.parseFromString(content).innerHTML, expected);
 });
 
-QUnit.test('Image', function(assert) {
+QUnit.test('Figure', function(assert) {
   assert.expect(1);
   var content = [
     "[[File:http://www.example.com/foo|Test image ''with formatting'']]"
   ].join('\n');
 
   var expected = [
-    '<p><imgtemp><src>http://www.example.com/foo</src>',
-    '<caption>Test image <i>with formatting</i></caption></imgtemp></p>'
+    '<p><figure><img src=\"http://www.example.com/foo\"><figcaption>Test ',
+    'image <i>with formatting</i></figcaption></figure></p>'
   ].join('');
 
   assert.equal(mediawiki.parseFromString(content).innerHTML, expected);

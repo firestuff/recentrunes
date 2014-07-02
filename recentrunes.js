@@ -727,6 +727,50 @@ rr.SingleLineText = function() {
 
 /**
  * @param {string} parentName
+ * @param {string} childName
+ * @return {rr.typeFilter}
+ */
+rr.ChildToAttribute = function(parentName, childName) {
+  parentName = parentName.toUpperCase();
+  childName = childName.toUpperCase();
+  return function(node) {
+    if (node.nodeName != parentName) {
+      return;
+    }
+    for (var i = 0; i < node.childNodes.length; i++) {
+      var childNode = node.childNodes[i];
+      if (childNode.nodeName == childName) {
+        node.setAttribute(childName, childNode.textContent);
+        node.removeChild(childNode);
+        break;
+      }
+    }
+  };
+};
+
+
+/**
+ * @param {string} nodeName
+ * @return {rr.typeFilter}
+ */
+rr.ExtractElement = function(nodeName) {
+  nodeName = nodeName.toUpperCase();
+  return function(node) {
+    if (node.nodeName != nodeName) {
+      return;
+    }
+    var parentNode = node.parentNode;
+    for (var i = 0; i < node.childNodes.length; i++) {
+      parentNode.appendChild(node.childNodes[i]);
+    }
+    parentNode.removeChild(node);
+    parentNode.normalize();
+  };
+};
+
+
+/**
+ * @param {string} parentName
  * @param {string} childNames
  * @return {rr.typeFilter}
  */
@@ -766,6 +810,10 @@ rr.RenameElement = function(oldName, newName) {
     var newNode = document.createElement(newName);
     for (var i = 0; i < node.childNodes.length; i++) {
       newNode.appendChild(node.childNodes[i]);
+    }
+    for (var i = 0; i < node.attributes.length; i++) {
+      var attribute = node.attributes[i];
+      newNode.setAttribute(attribute.name, attribute.value);
     }
     node.parentNode.replaceChild(newNode, node);
   };

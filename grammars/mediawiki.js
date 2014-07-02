@@ -78,10 +78,11 @@ mediawiki = rr.Parser({
       rr.Literal('### '),
       rr.Ref('singleline-wikichunk'),
       rr.EndOfLine())),
-  'list-pre': rr.Node('pre', rr.Sequence(
+  'list-pre': rr.Node('preline', rr.Sequence(
       rr.StartOfLine(),
       rr.Literal(' '),
       rr.SingleLineText(),
+      rr.Insert('\n'),
       rr.EndOfLine())),
   'list-ulli1': rr.Node('ulli1', rr.Sequence(
       rr.StartOfLine(),
@@ -137,14 +138,14 @@ mediawiki = rr.Parser({
       rr.Literal("''"),
       rr.Ref('multiline-wikichunk'),
       rr.Literal("''"))),
-  'multiline-img': rr.Node('imgtemp', rr.Sequence(
+  'multiline-figure': rr.Node('figure', rr.Sequence(
       rr.Literal('[[File:'),
       rr.Node('src', rr.SingleLineText()),
       rr.ZeroOrMore(rr.Sequence(
           rr.Literal('|'),
           rr.Node('option', rr.SingleLineText()))),
       rr.Literal('|'),
-      rr.Node('caption', rr.Ref('multiline-wikichunk')),
+      rr.Node('figcaption', rr.Ref('multiline-wikichunk')),
       rr.Literal(']]'))),
   'multiline-nowiki': rr.Sequence(
       rr.Literal('<nowiki>'),
@@ -245,7 +246,7 @@ mediawiki = rr.Parser({
       rr.Ref('list-ulli2'),
       rr.Ref('list-ulli3'),
 
-      rr.Ref('multiline-img'),
+      rr.Ref('multiline-figure'),
       rr.Ref('multiline-a'),
       rr.Ref('multiline-bi'),
       rr.Ref('multiline-b'),
@@ -306,5 +307,10 @@ mediawiki = rr.Parser({
   rr.GroupSiblings('ol', ['olli3']),
   rr.RenameElement('olli1', 'li'),
   rr.RenameElement('olli2', 'li'),
-  rr.RenameElement('olli3', 'li')
+  rr.RenameElement('olli3', 'li'),
+  rr.GroupSiblings('pre', ['preline']),
+  rr.ExtractElement('preline'),
+  rr.SplitElementAndNest('src', ['imgtemp', 'src']),
+  rr.ChildToAttribute('imgtemp', 'src'),
+  rr.RenameElement('imgtemp', 'img')
 ]);
