@@ -753,7 +753,7 @@ rr.GroupSiblings = function(parentName, childNames) {
  * @param {string} newName
  * @return {rr.typeFilter}
  */
-rr.RenameTag = function(oldName, newName) {
+rr.RenameElement = function(oldName, newName) {
   return function(node) {
     if (node.nodeName.toLowerCase() != oldName) {
       return;
@@ -772,7 +772,7 @@ rr.RenameTag = function(oldName, newName) {
  * @param {Array.<string>} newNames
  * @return {rr.typeFilter}
  */
-rr.SplitTagAndNest = function(originalName, newNames) {
+rr.SplitElementAndNest = function(originalName, newNames) {
   return function(node) {
     if (node.nodeName.toLowerCase() != originalName) {
       return;
