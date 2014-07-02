@@ -9,8 +9,10 @@ class MatchResult(collections.namedtuple('MatchResult', ['context', 'nodes'])):
 class TextNode(object):
   def __init__(self, textContent):
     self.nodeName = '#text'
+    self.parentNode = None
     self.textContent = textContent
     self.previousSibling = None
+    self.nextSibling = None
     self.childNodes = []
 
   def cloneNode(self, deep):
@@ -31,29 +33,45 @@ class Element(object):
     self.nodeName = nodeName
     self.parentNode = None
     self.previousSibling = None
+    self.nextSibling = None
     self.childNodes = []
     self.attributes = {}
 
   def appendChild(self, child):
+    if child.parentNode:
+      child.parentNode.removeChild(child)
     child.parentNode = self
     self.childNodes.append(child)
     if len(self.childNodes) == 1:
       child.previousSibling = None
     else:
-      child.previousSibling = self.childNodes[len(self.childNodes) - 2]
+      beforeChild = self.childNodes[len(self.childNodes) - 2]
+      child.previousSibling = beforeChild
+      beforeChild.nextSibling = child
 
   def removeChild(self, child):
     self.childNodes.remove(child)
+    if child.previousSibling:
+      child.previousSibling.nextSibling = child.nextSibling
+    if child.nextSibling:
+      child.nextSibling.previousSibling = child.previousSibling
     child.parentNode = None
     child.previousSibling = None
+    child.nextSibling = None
 
   def replaceChild(self, newNode, oldNode):
     index = self.childNodes.index(oldNode)
     self.childNodes[index] = newNode
     newNode.parentNode = self
-    oldNode.parentNode = None
     newNode.previousSibling = oldNode.previousSibling
+    newNode.nextSibling = oldNode.nextSibling
+    if newNode.previousSibling:
+      newNode.previousSibling.nextSibling = newNode
+    if newNode.nextSibling:
+      newNode.nextSibling.previousSibling = newNode
+    oldNode.parentNode = None
     oldNode.previousSibling = None
+    oldNode.nextSibling = None
 
   def normalize(self):
     lastTextNode = None
@@ -354,7 +372,7 @@ def SplitElementAndNest(originalName, newNames):
 
 def ApplyFilter(node, callback):
   callback(node)
-  for childNode in node.childNodes:
+  for childNode in list(node.childNodes):
     ApplyFilter(childNode, callback)
 
 
