@@ -85,8 +85,8 @@ QUnit.test('Link', function(assert) {
   ].join('\n');
 
   var expected = [
-    '<p><a><href>http://www.example.com/foo</href>',
-    'Test text <i>with formatting</i></a></p>'
+    '<p><a href="http://www.example.com/foo">Test text <i>with formatting</i>',
+    '</a></p>'
   ].join('');
 
   assert.equal(mediawiki.parseFromString(content).innerHTML, expected);
@@ -99,8 +99,8 @@ QUnit.test('Figure', function(assert) {
   ].join('\n');
 
   var expected = [
-    '<p><figure><img src=\"http://www.example.com/foo\"><figcaption>Test ',
-    'image <i>with formatting</i></figcaption></figure></p>'
+    '<p><figure><img src="http://www.example.com/foo"><figcaption>Test image ',
+    '<i>with formatting</i></figcaption></figure></p>'
   ].join('');
 
   assert.equal(mediawiki.parseFromString(content).innerHTML, expected);

@@ -312,5 +312,6 @@ mediawiki = rr.Parser({
   rr.ExtractElement('preline'),
   rr.SplitElementAndNest('src', ['imgtemp', 'src']),
   rr.ChildToAttribute('imgtemp', 'src'),
-  rr.RenameElement('imgtemp', 'img')
+  rr.RenameElement('imgtemp', 'img'),
+  rr.ChildToAttribute('a', 'href')
 ]);
