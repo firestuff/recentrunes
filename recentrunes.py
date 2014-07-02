@@ -16,9 +16,11 @@ class TextNode(object):
   def cloneNode(self, deep):
     return TextNode(self.textContent)
 
-  def __str__(self):
-    # TODO: HTML escaping
+  def getTextContent(self):
     return self.textContent
+
+  def __str__(self):
+    return self.textContent.replace('&', '&amp;').replace('<', '&lt;')
 
 
 class Element(object):
@@ -81,10 +83,18 @@ class Element(object):
       element.setAttribute(key, value)
     return element
 
+  def getTextContent(self):
+    return ''.join(x.getTextContent() for x in self.childNodes)
+
   def __str__(self):
     # TODO: attributes
     values = map(str, self.childNodes)
-    return '<%s>%s</%s>' % (self.nodeName, ''.join(values), self.nodeName)
+    return '<%s%s>%s</%s>' % (
+        self.nodeName,
+        ''.join(' %s="%s"' % (k, v.replace('"', '&quot;'))
+                              for k, v in self.attributes.iteritems()),
+        ''.join(values),
+        self.nodeName)
 
 
 # ============ Matchers ============
@@ -277,7 +287,7 @@ def ChildToAttribute(parentName, childName):
       return
     for childNode in node.childNodes:
       if childNode.nodeName == childName:
-        node.setAttribute(childName, childNode.textContent)
+        node.setAttribute(childName, childNode.getTextContent())
         node.removeChild(childNode)
         break
   return Filter
