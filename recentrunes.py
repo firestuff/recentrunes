@@ -20,7 +20,10 @@ class TextNode(object):
     return self.textContent
 
   def __str__(self):
-    return self.textContent.replace('&', '&amp;').replace('<', '&lt;')
+    return (self.textContent
+            .replace('&', '&amp;')
+            .replace('<', '&lt;')
+            .replace('>', '&gt;'))
 
 
 class Element(object):
