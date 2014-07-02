@@ -293,8 +293,6 @@ mediawiki = rr.Parser({
   'main': rr.Node('wikidoc', rr.Sequence(
       rr.ZeroOrMore(rr.Ref('paragraph')),
       rr.EndOfText()))
-}, {
-  'bi': [
-    rr.SplitTagAndNest('b', 'i')
-  ]
-});
+}, [
+  rr.SplitTagAndNest('bi', ['b', 'i'])
+]);
