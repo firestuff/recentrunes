@@ -294,5 +294,17 @@ mediawiki = rr.Parser({
       rr.ZeroOrMore(rr.Ref('paragraph')),
       rr.EndOfText()))
 }, [
-  rr.SplitTagAndNest('bi', ['b', 'i'])
+  rr.SplitTagAndNest('bi', ['b', 'i']),
+  rr.GroupSiblings('ul', ['ulli1', 'ulli2', 'ulli3']),
+  rr.GroupSiblings('ul', ['ulli2', 'ulli3']),
+  rr.GroupSiblings('ul', ['ulli3']),
+  rr.RenameTag('ulli1', 'li'),
+  rr.RenameTag('ulli2', 'li'),
+  rr.RenameTag('ulli3', 'li'),
+  rr.GroupSiblings('ol', ['olli1', 'olli2', 'olli3']),
+  rr.GroupSiblings('ol', ['olli2', 'olli3']),
+  rr.GroupSiblings('ol', ['olli3']),
+  rr.RenameTag('olli1', 'li'),
+  rr.RenameTag('olli2', 'li'),
+  rr.RenameTag('olli3', 'li')
 ]);

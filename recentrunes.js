@@ -424,7 +424,7 @@ rr.Or_.prototype.match = function(context) {
  * @return {rr.Or_}
  */
 rr.Or = function() {
-  return new rr.Or_(Array.prototype.slice.call(arguments, 0));
+  return new rr.Or_(Array.prototype.slice.call(arguments));
 };
 
 
@@ -726,6 +726,48 @@ rr.SingleLineText = function() {
 
 
 /**
+ * @param {string} parentName
+ * @param {string} childNames
+ * @return {rr.typeFilter}
+ */
+rr.GroupSiblings = function(parentName, childNames) {
+  return function(node) {
+    if (childNames.indexOf(node.nodeName.toLowerCase()) == -1) {
+      return;
+    }
+    if (node.previousSibling &&
+        node.previousSibling.nodeName.toLowerCase() == parentName) {
+      // Group with previous node.
+      node.previousSibling.appendChild(node);
+      return;
+    }
+    var newNode = document.createElement(parentName);
+    node.parentNode.replaceChild(newNode, node);
+    newNode.appendChild(node);
+  };
+};
+
+
+/**
+ * @param {string} oldName
+ * @param {string} newName
+ * @return {rr.typeFilter}
+ */
+rr.RenameTag = function(oldName, newName) {
+  return function(node) {
+    if (node.nodeName.toLowerCase() != oldName) {
+      return;
+    }
+    var newNode = document.createElement(newName);
+    for (var i = 0; i < node.childNodes.length; i++) {
+      newNode.appendChild(node.childNodes[i]);
+    }
+    node.parentNode.replaceChild(newNode, node);
+  };
+};
+
+
+/**
  * @param {string} originalName
  * @param {Array.<string>} newNames
  * @return {rr.typeFilter}
@@ -759,14 +801,24 @@ rr.SplitTagAndNest = function(originalName, newNames) {
 
 /**
  * @param {Node} node
- * @param {Object.<string, rr.typeFilter>} filters
+ * @param {rr.typeFilter} filter
+ */
+rr.ApplyFilter = function(node, filter) {
+  filter(node);
+  var children = Array.prototype.slice.call(node.childNodes);
+  for (var i = 0; i < children.length; i++) {
+    rr.ApplyFilter(children[i], filter);
+  }
+};
+
+
+/**
+ * @param {Node} node
+ * @param {Array.<rr.typeFilter>} filters
  */
 rr.ApplyFilters = function(node, filters) {
   for (var i = 0; i < filters.length; i++) {
-    filters[i](node);
-  }
-  for (var i = 0; i < node.childNodes.length; i++) {
-    rr.ApplyFilters(node.childNodes[i], filters);
+    rr.ApplyFilter(node, filters[i]);
   }
 };
 
@@ -863,7 +915,7 @@ rr.Context.prototype.advance = function(numChars) {
  * @constructor
  *
  * @param {Object.<string, rr.typeMatcher>} rules
- * @param {Object.<string, rr.typeFilter>} filters
+ * @param {Array.<rr.typeFilter>} filters
  * @private
  */
 rr.Parser_ = function(rules, filters) {
@@ -891,7 +943,7 @@ rr.Parser_.prototype.parseFromString = function(input) {
 
 /**
  * @param {Object.<string, rr.typeMatcher>} rules
- * @param {Object.<string, rr.typeFilter>} filters
+ * @param {Array.<rr.typeFilter>} filters
  * @return {rr.Parser_}
  */
 rr.Parser = function(rules, filters) {
