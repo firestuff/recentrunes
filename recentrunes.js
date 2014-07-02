@@ -726,15 +726,18 @@ rr.SingleLineText = function() {
 
 
 /**
- * @param {...string} var_args
+ * @param {string} originalName
+ * @param {Array.<string>} newNames
  * @return {rr.typeFilter}
  */
-rr.SplitTagAndNest = function(var_args) {
-  var hierarchy = Array.prototype.slice.call(arguments);
+rr.SplitTagAndNest = function(originalName, newNames) {
   return function(node) {
+    if (node.nodeName.toLowerCase() != originalName) {
+      return;
+    }
     var outerNode, innerNode;
-    for (var i = 0; i < hierarchy.length; i++) {
-      var newNode = document.createElement(hierarchy[i]);
+    for (var i = 0; i < newNames.length; i++) {
+      var newNode = document.createElement(newNames[i]);
       if (i == 0) {
         outerNode = innerNode = newNode;
       } else {
@@ -759,9 +762,8 @@ rr.SplitTagAndNest = function(var_args) {
  * @param {Object.<string, rr.typeFilter>} filters
  */
 rr.ApplyFilters = function(node, filters) {
-  var nodeFilters = filters[node.nodeName.toLowerCase()] || [];
-  for (var i = 0; i < nodeFilters.length; i++) {
-    nodeFilters[i](node);
+  for (var i = 0; i < filters.length; i++) {
+    filters[i](node);
   }
   for (var i = 0; i < node.childNodes.length; i++) {
     rr.ApplyFilters(node.childNodes[i], filters);
