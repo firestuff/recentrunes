@@ -759,9 +759,9 @@ rr.SplitTagAndNest = function(var_args) {
  * @param {Object.<string, rr.typeFilter>} filters
  */
 rr.ApplyFilters = function(node, filters) {
-  var filter = filters[node.nodeName.toLowerCase()];
-  if (filter) {
-    filter(node);
+  var nodeFilters = filters[node.nodeName.toLowerCase()] || [];
+  for (var i = 0; i < nodeFilters.length; i++) {
+    nodeFilters[i](node);
   }
   for (var i = 0; i < node.childNodes.length; i++) {
     rr.ApplyFilters(node.childNodes[i], filters);

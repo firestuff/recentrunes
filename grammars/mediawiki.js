@@ -294,5 +294,7 @@ mediawiki = rr.Parser({
       rr.ZeroOrMore(rr.Ref('paragraph')),
       rr.EndOfText()))
 }, {
-  'bi': rr.SplitTagAndNest('b', 'i')
+  'bi': [
+    rr.SplitTagAndNest('b', 'i')
+  ]
 });
