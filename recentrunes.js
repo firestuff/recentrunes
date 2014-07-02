@@ -731,12 +731,16 @@ rr.SingleLineText = function() {
  * @return {rr.typeFilter}
  */
 rr.GroupSiblings = function(parentName, childNames) {
+  parentName = parentName.toUpperCase();
+  childNames = childNames.map(function(name) {
+    return name.toUpperCase();
+  });
   return function(node) {
-    if (childNames.indexOf(node.nodeName.toLowerCase()) == -1) {
+    if (childNames.indexOf(node.nodeName) == -1) {
       return;
     }
     if (node.previousSibling &&
-        node.previousSibling.nodeName.toLowerCase() == parentName) {
+        node.previousSibling.nodeName == parentName) {
       // Group with previous node.
       node.previousSibling.appendChild(node);
       return;
@@ -754,8 +758,9 @@ rr.GroupSiblings = function(parentName, childNames) {
  * @return {rr.typeFilter}
  */
 rr.RenameElement = function(oldName, newName) {
+  oldName = oldName.toUpperCase();
   return function(node) {
-    if (node.nodeName.toLowerCase() != oldName) {
+    if (node.nodeName != oldName) {
       return;
     }
     var newNode = document.createElement(newName);
@@ -773,8 +778,9 @@ rr.RenameElement = function(oldName, newName) {
  * @return {rr.typeFilter}
  */
 rr.SplitElementAndNest = function(originalName, newNames) {
+  originalName = originalName.toUpperCase();
   return function(node) {
-    if (node.nodeName.toLowerCase() != originalName) {
+    if (node.nodeName != originalName) {
       return;
     }
     var outerNode, innerNode;
