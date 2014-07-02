@@ -973,8 +973,8 @@ rr.Context.prototype.advance = function(numChars) {
  * @private
  */
 rr.Parser_ = function(rules, filters) {
-  this.rules_ = rules;
-  this.filters_ = filters;
+  this.rules = rules;
+  this.filters = filters;
 };
 
 
@@ -983,14 +983,14 @@ rr.Parser_ = function(rules, filters) {
  * @return {?Node}
  */
 rr.Parser_.prototype.parseFromString = function(input) {
-  var context = new rr.Context(this.rules_, input);
+  var context = new rr.Context(this.rules, input);
   var iterable = context.rules['main'].match(context);
   var next = iterable.next();
   if (next['done']) {
     return null;
   }
   var rootNode = next['value']['nodes'][0];
-  rr.ApplyFilters(rootNode, this.filters_);
+  rr.ApplyFilters(rootNode, this.filters);
   return rootNode;
 };
 
