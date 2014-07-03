@@ -50,4 +50,4 @@ code looks like <code>this</code>. Fixed width text looks like
 stop &lt;u&gt;this from being underlined&lt;/u&gt;, or just try 
 &lt;pre&gt;interrupting cow style.&lt;/pre&gt;<blockquote>This is a blockquote</blockquote></p><p><h2>Header 2</h2><h3>Header 3 <i>with italics</i></h3><h4>Header 4</h4><h5>Header 5</h5><h6>Header 6</h6><hr></hr><ul><li>Item 1a</li><li>Item 1b</li><ul><li>Item 2</li><ul><li>Item 3</li></ul></ul><li>Item 1c</li></ul><ol><li>Item 1a</li><li>Item 1b</li><ol><li>Item 2</li><ol><li>Item 3</li></ol></ol><li>Item 1c</li></ol><def>I don't really understand what a definition is</def><blockquote>But blockquotes are easy</blockquote><blockquote2>Even larger ones</blockquote2><blockquote5>And really huge ones</blockquote5><pre>This line is pre-formatted and &lt;del&gt;not interpolated&lt;/del&gt;
 This line is also pre-formatted
-</pre></p></wikidoc>"""
+</pre></p></wikidoc>""", result

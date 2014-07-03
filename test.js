@@ -54,10 +54,11 @@ QUnit.test('Base', function(assert) {
     '</li></ul></ul><li>Item 1c</li></ul><ol><li>Item 1a</li><li>Item 1b</li>',
     '<ol><li>Item 2</li><ol><li>Item 3</li></ol></ol><li>Item 1c</li></ol>',
     "<def>I don't really understand what a definition is</def><blockquote>",
-    'But blockquotes are easy</blockquote><blockquote2>Even larger ones',
-    '</blockquote2><blockquote5>And really huge ones</blockquote5><pre>This ',
-    'line is pre-formatted and &lt;del&gt;not interpolated&lt;/del&gt;\nThis ',
-    'line is also pre-formatted\n</pre></p>'
+    'But blockquotes are easy<blockquote>Even larger ones<blockquote>',
+    '<blockquote><blockquote>And really huge ones</blockquote></blockquote>',
+    '</blockquote></blockquote></blockquote><pre>This line is pre-formatted ',
+    'and &lt;del&gt;not interpolated&lt;/del&gt;\nThis line is also ',
+    'pre-formatted\n</pre></p>'
   ].join('');
 
   assert.equal(mediawiki.parseFromString(content).innerHTML, expected);

@@ -1,5 +1,5 @@
 mediawiki = rr.Parser({
-  'list-blockquote1': rr.Node('blockquote', rr.Sequence(
+  'list-blockquote1': rr.Node('blockquote1', rr.Sequence(
       rr.StartOfLine(),
       rr.Literal(': '),
       rr.Ref('singleline-wikichunk'),
@@ -313,5 +313,18 @@ mediawiki = rr.Parser({
   rr.SplitElementAndNest('src', ['imgtemp', 'src']),
   rr.ChildToAttribute('imgtemp', 'src'),
   rr.RenameElement('imgtemp', 'img'),
-  rr.ChildToAttribute('a', 'href')
+  rr.ChildToAttribute('a', 'href'),
+  rr.GroupSiblings('blockquote', [
+      'blockquote1', 'blockquote2', 'blockquote3', 'blockquote4',
+      'blockquote5']),
+  rr.GroupSiblings('blockquote', [
+      'blockquote2', 'blockquote3', 'blockquote4', 'blockquote5']),
+  rr.GroupSiblings('blockquote', ['blockquote3', 'blockquote4', 'blockquote5']),
+  rr.GroupSiblings('blockquote', ['blockquote4', 'blockquote5']),
+  rr.GroupSiblings('blockquote', ['blockquote5']),
+  rr.ExtractElement('blockquote1'),
+  rr.ExtractElement('blockquote2'),
+  rr.ExtractElement('blockquote3'),
+  rr.ExtractElement('blockquote4'),
+  rr.ExtractElement('blockquote5')
 ]);

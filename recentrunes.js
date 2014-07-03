@@ -761,7 +761,7 @@ rr.ExtractElement = function(nodeName) {
     }
     var parentNode = node.parentNode;
     for (var i = 0; i < node.childNodes.length; i++) {
-      parentNode.appendChild(node.childNodes[i]);
+      parentNode.insertBefore(node.childNodes[i], node);
     }
     parentNode.removeChild(node);
     parentNode.normalize();
@@ -783,15 +783,17 @@ rr.GroupSiblings = function(parentName, childNames) {
     if (childNames.indexOf(node.nodeName) == -1) {
       return;
     }
-    if (node.previousSibling &&
-        node.previousSibling.nodeName == parentName) {
-      // Group with previous node.
-      node.previousSibling.appendChild(node);
-      return;
+    var nodes = [];
+    for (var iterNode = node;
+         iterNode && childNames.indexOf(iterNode.nodeName) != -1;
+         iterNode = iterNode.nextSibling) {
+      nodes.push(iterNode);
     }
     var newNode = document.createElement(parentName);
     node.parentNode.replaceChild(newNode, node);
-    newNode.appendChild(node);
+    for (var i = 0; i < nodes.length; i++) {
+      newNode.appendChild(nodes[i]);
+    }
   };
 };
 
@@ -859,9 +861,8 @@ rr.SplitElementAndNest = function(originalName, newNames) {
  */
 rr.ApplyFilter = function(node, filter) {
   filter(node);
-  var children = Array.prototype.slice.call(node.childNodes);
-  for (var i = 0; i < children.length; i++) {
-    rr.ApplyFilter(children[i], filter);
+  for (var i = 0; i < node.childNodes.length; i++) {
+    rr.ApplyFilter(node.childNodes[i], filter);
   }
 };
 
