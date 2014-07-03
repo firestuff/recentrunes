@@ -73,6 +73,15 @@ class Element(object):
     oldNode.previousSibling = None
     oldNode.nextSibling = None
 
+  def insertBefore(self, newNode, oldNode):
+    index = self.childNodes.index(oldNode)
+    self.childNodes.insert(index, newNode)
+    if oldNode.previousSibling:
+      oldNode.previousSibling.nextSibling = newNode
+      newNode.previousSibling = oldNode.previousSibling
+    oldNode.previousSibling = newNode
+    newNode.nextSibling = oldNode
+
   def normalize(self):
     lastTextNode = None
     for childNode in list(self.childNodes):
@@ -320,7 +329,7 @@ def ExtractElement(nodeName):
       return
     parentNode = node.parentNode
     for childNode in node.childNodes:
-      parentNode.appendChild(childNode)
+      parentNode.insertBefore(childNode, node)
     parentNode.removeChild(node)
     parentNode.normalize()
   return Filter
@@ -330,13 +339,15 @@ def GroupSiblings(parentName, childNames):
   def Filter(node):
     if node.nodeName not in childNames:
       return
-    if (node.previousSibling and
-        node.previousSibling.nodeName == parentName):
-      node.previousSibling.appendChild(node)
-      return
+    nodes = []
+    iterNode = node
+    while iterNode and iterNode.nodeName in childNames:
+      nodes.append(iterNode)
+      iterNode = iterNode.nextSibling
     newNode = Element(parentName)
     node.parentNode.replaceChild(newNode, node)
-    newNode.appendChild(node)
+    for childNode in nodes:
+      newNode.appendChild(childNode)
   return Filter
 
 
@@ -372,8 +383,10 @@ def SplitElementAndNest(originalName, newNames):
 
 def ApplyFilter(node, callback):
   callback(node)
-  for childNode in list(node.childNodes):
-    ApplyFilter(childNode, callback)
+  i = 0
+  while i < len(node.childNodes):
+    ApplyFilter(node.childNodes[i], callback)
+    i += 1
 
 
 def ApplyFilters(node, filters):
