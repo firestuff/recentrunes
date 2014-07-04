@@ -1,6 +1,6 @@
 handlers:
-- url: /recentrunes
-  static_dir: recentrunes
+- url: /recentrunes/static
+  static_dir: recentrunes/static
   secure: always
   http_headers:
     X-Frame-Options: DENY

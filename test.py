@@ -2,7 +2,7 @@
 
 import recentrunes
 
-parser = recentrunes.Parser.fromFile('grammars/mediawiki.js')
+parser = recentrunes.Parser.fromFile('static/grammars/mediawiki.js')
 teststring = \
 """This is a paragraph with many text styles. This is ''italic'' and this 
 is '''bold'''; this is '''''both'''''. This is <u>underline</u> as is 
