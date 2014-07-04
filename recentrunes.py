@@ -135,6 +135,13 @@ class Matcher(object):
 
 
 class CharExcept(Matcher):
+  _cache = {}
+
+  def __new__(cls, chars):
+    if chars not in cls._cache:
+      cls._cache[chars] = super(CharExcept, cls).__new__(cls, chars)
+    return cls._cache[chars]
+
   def __init__(self, chars):
     self._chars = chars
 
@@ -147,6 +154,13 @@ class CharExcept(Matcher):
 
 
 class EndOfLine(Matcher):
+  _cache = None
+
+  def __new__(cls):
+    if not cls._cache:
+      cls._cache = super(EndOfLine, cls).__new__(cls)
+    return cls._cache
+
   def match(self, context):
     if context.atEnd():
       yield MatchResult(
@@ -163,6 +177,13 @@ class EndOfLine(Matcher):
 
 
 class EndOfText(Matcher):
+  _cache = None
+
+  def __new__(cls):
+    if not cls._cache:
+      cls._cache = super(EndOfText, cls).__new__(cls)
+    return cls._cache
+
   def match(self, context):
     if context.atEnd():
       yield MatchResult(
@@ -182,6 +203,13 @@ class Hidden(Matcher):
 
 
 class Insert(Matcher):
+  _cache = {}
+
+  def __new__(cls, value):
+    if value not in cls._cache:
+      cls._cache[value] = super(Insert, cls).__new__(cls, value)
+    return cls._cache[value]
+
   def __init__(self, value):
     self._value = value
 
@@ -192,6 +220,13 @@ class Insert(Matcher):
 
 
 class Literal(Matcher):
+  _cache = {}
+
+  def __new__(cls, value):
+    if value not in cls._cache:
+      cls._cache[value] = super(Literal, cls).__new__(cls, value)
+    return cls._cache[value]
+
   def __init__(self, value):
     self._value = value
 
@@ -229,6 +264,13 @@ class Or(Matcher):
 
 
 class Ref(Matcher):
+  _cache = {}
+
+  def __new__(cls, key):
+    if key not in cls._cache:
+      cls._cache[key] = super(Ref, cls).__new__(cls, key)
+    return cls._cache[key]
+
   def __init__(self, key):
     self._key = key
 
@@ -250,6 +292,13 @@ class SequentialPair(Matcher):
 
 
 class StartOfLine(Matcher):
+  _cache = None
+
+  def __new__(cls):
+    if not cls._cache:
+      cls._cache = super(StartOfLine, cls).__new__(cls)
+    return cls._cache
+
   def match(self, context):
     if context.atStart():
       yield MatchResult(
@@ -283,12 +332,22 @@ class ZeroOrMore(Matcher):
 # ============ Convenience factories ============
 
 
-def Char():
-  return CharExcept('')
+class Char(object):
+  _cache = None
+
+  def __new__(cls):
+    if not cls._cache:
+      cls._cache = CharExcept('')
+    return cls._cache
 
 
-def MultiLineText():
-  return OneOrMore(Char())
+class MultiLineText(object):
+  _cache = None
+
+  def __new__(cls):
+    if not cls._cache:
+      cls._cache = OneOrMore(Char())
+    return cls._cache
 
 
 def OneOrMore(child):
@@ -303,9 +362,13 @@ def Sequence(*children):
       Sequence(*children[1:]))
 
 
-def SingleLineText():
-  return OneOrMore(CharExcept('\n'))
+class SingleLineText(object):
+  _cache = None
 
+  def __new__(cls):
+    if not cls._cache:
+      cls._cache = OneOrMore(CharExcept('\n'))
+    return cls._cache
 
 
 # ============ Filter factories ============
