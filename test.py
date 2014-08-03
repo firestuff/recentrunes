@@ -2,7 +2,7 @@
 
 import recentrunes
 
-parser = recentrunes.Parser.fromFile('static/grammars/mediawiki.js')
+mediawiki = recentrunes.Parser.fromFile('static/grammars/mediawiki.js')
 teststring = \
 """This is a paragraph with many text styles. This is ''italic'' and this 
 is '''bold'''; this is '''''both'''''. This is <u>underline</u> as is 
@@ -38,7 +38,7 @@ shouldn't be visible --><blockquote>This is a blockquote</blockquote>
  This line is pre-formatted and <del>not interpolated</del>
  This line is also pre-formatted"""
 
-result = str(parser.parseFromString(teststring))
+result = str(mediawiki.parseFromString(teststring))
 assert result == \
 """<wikidoc><p>This is a paragraph with many text styles. This is <i>italic</i> and this 
 is <b>bold</b>; this is <b><i>both</i></b>. This is <u>underline</u> as is 
@@ -53,4 +53,14 @@ This line is also pre-formatted
 </pre></p></wikidoc>""", result
 
 
-parser = recentrunes.Parser.fromFile('static/grammars/badpenny.js')
+badpenny = recentrunes.Parser.fromFile('static/grammars/badpenny.js')
+teststring = \
+"""foo{{value1}}bar
+foo{{(container1}}contents{{)nottheend}}more contents{{)container1}}bar
+foo{{[repeated1}}testing{{]notthis}}{{)repeated1}}zig{{]repeated1}}bar"""
+
+result = str(badpenny.parseFromString(teststring))
+assert result == \
+"""<badpenny>foo<value name="value1"></value>bar
+foo<container name="container1">contents{{)nottheend}}more contents</container>bar
+foo<repeated name="repeated1">testing{{]notthis}}{{)repeated1}}zig</repeated>bar</badpenny>"""

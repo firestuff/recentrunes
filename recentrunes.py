@@ -117,7 +117,6 @@ class Element(object):
     return ''.join(x.getTextContent() for x in self.childNodes)
 
   def __str__(self):
-    # TODO: attributes
     values = map(str, self.childNodes)
     return '<%s%s>%s</%s>' % (
         self.nodeName,
@@ -278,6 +277,37 @@ class Ref(Matcher):
     return context.rules[self._key].match(context)
 
 
+class SaveAndDiscard(Matcher):
+  def __init__(self, key, child):
+    self._key = key
+    self._child = child
+
+  def match(self, context):
+    for result in self._child.match(context):
+      values = []
+      for node in result.nodes:
+        values.append(node.getTextContent())
+      yield MatchResult(
+          context.saveValue(self._key, ''.join(values)),
+          [])
+
+
+class SavedLiteral(Matcher):
+  _cache = {}
+
+  def __new__(cls, key):
+    if key not in cls._cache:
+      cls._cache[key] = super(SavedLiteral, cls).__new__(cls, key)
+    return cls._cache[key]
+
+  def __init__(self, key):
+    self._key = key
+
+  def match(self, context):
+    value = context.getValue(self._key)
+    return Literal(value).match(context)
+
+
 class SequentialPair(Matcher):
   def __init__(self, child1, child2):
     self._child1 = child1
@@ -352,6 +382,11 @@ class MultiLineText(object):
 
 def OneOrMore(child):
   return SequentialPair(child, ZeroOrMore(child))
+
+
+def Save(key, saveChild, matchChild):
+  save = SaveAndDiscard(key, saveChild)
+  return SequentialPair(save, matchChild)
 
 
 def Sequence(*children):
@@ -458,13 +493,14 @@ def ApplyFilters(node, filters):
 
 
 class Context(object):
-  def __init__(self, rules, string, inputIndex=0):
+  def __init__(self, rules, string, inputIndex=0, savedValues=None):
     self.rules = rules
     self.string = string
     self.inputIndex = inputIndex
+    self.savedValues = dict(savedValues or {})
 
   def copy(self):
-    return Context(self.rules, self.string, self.inputIndex)
+    return Context(self.rules, self.string, self.inputIndex, self.savedValues)
 
   def stringAfter(self, numChars=None):
     if numChars is None:
@@ -492,6 +528,14 @@ class Context(object):
       raise Exception('Context.advance(0) called')
     context = self.copy()
     context.inputIndex += numChars
+    return context
+
+  def getValue(self, key):
+    return self.savedValues[key]
+
+  def saveValue(self, key, value):
+    context = self.copy()
+    context.savedValues[key] = value
     return context
 
 
@@ -536,6 +580,8 @@ class rr(object):
       'Node': Node,
       'Or': Or,
       'Ref': Ref,
+      'Save': Save,
+      'SavedLiteral': SavedLiteral,
       'SequentialPair': SequentialPair,
       'StartOfLine': StartOfLine,
       'ZeroOrMore': ZeroOrMore, 

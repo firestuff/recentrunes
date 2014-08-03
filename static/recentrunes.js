@@ -475,7 +475,7 @@ rr.Ref.cache_ = {};
  * @param {rr.typeMatcher} child
  * @private
  */
-rr.Save_ = function(key, child) {
+rr.SaveAndDiscard_ = function(key, child) {
   this.key_ = key;
   this.child_ = child;
 };
@@ -485,7 +485,7 @@ rr.Save_ = function(key, child) {
  * @param {rr.Context} context
  * @return {rr.typeIterator}
  */
-rr.Save_.prototype.match = function(context) {
+rr.SaveAndDiscard_.prototype.match = function(context) {
   var iterator = this.child_.match(context);
   return {
     'next': function() {
@@ -507,17 +507,6 @@ rr.Save_.prototype.match = function(context) {
       };
     }.bind(this)
   };
-};
-
-
-/**
- * @param {string} key
- * @param {rr.typeMatcher} saveChild
- * @param {rr.typeMatcher} matchChild
- * @return {rr.SequentialPair_}
- */
-rr.Save = function(key, saveChild, matchChild) {
-  return new rr.SequentialPair_(new rr.Save_(key, saveChild), matchChild);
 };
 
 
@@ -782,6 +771,18 @@ rr.MultiLineText = function() {
  */
 rr.OneOrMore = function(child) {
   return rr.SequentialPair(child, rr.ZeroOrMore(child));
+};
+
+
+/**
+ * @param {string} key
+ * @param {rr.typeMatcher} saveChild
+ * @param {rr.typeMatcher} matchChild
+ * @return {rr.SequentialPair_}
+ */
+rr.Save = function(key, saveChild, matchChild) {
+  save = new rr.SaveAndDiscard_(key, saveChild);
+  return new rr.SequentialPair_(save, matchChild);
 };
 
 
