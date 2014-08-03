@@ -114,14 +114,16 @@ QUnit.test('Base', function(assert) {
   assert.expect(1);
   var content = [
     'foo{{value1}}bar',
-    'foo{{(container}}contents{{)nottheend}}more contents{{)container}}bar',
-    'foo{{[repeated}}testing{{]notthis}}{{)repeated}}zig{{]repeated}}bar'
+    'foo{{(container1}}contents{{)nottheend}}more contents{{)container1}}bar',
+    'foo{{[repeated1}}testing{{]notthis}}{{)repeated1}}zig{{]repeated1}}bar'
   ].join('\n');
 
   var expected = [
-    'foo<value>value1</value>bar\n',
-    'foo<container>contents{{)nottheend}}more contents</container>bar\n',
-    'foo<repeated>testing{{]notthis}}{{)repeated}}zig</repeated>bar'
+    'foo<value name="value1"></value>bar\n',
+    'foo<container name="container1">contents{{)nottheend}}more contents',
+    '</container>bar\n',
+    'foo<repeated name="repeated1">testing{{]notthis}}{{)repeated1}}zig',
+    '</repeated>bar'
   ].join('');
 
   assert.equal(badpenny.parseFromString(content).innerHTML, expected);

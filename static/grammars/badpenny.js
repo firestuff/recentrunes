@@ -7,7 +7,7 @@ badpenny = rr.Parser({
           rr.Literal('}}')),
         rr.Sequence(
           rr.Literal('{{('),
-          rr.SavedLiteral('tagname'),
+          rr.Node('name', rr.SingleLineText()),
           rr.Literal('}}'),
           rr.MultiLineText(),
           rr.Literal('{{)'),
@@ -22,7 +22,7 @@ badpenny = rr.Parser({
           rr.Literal('}}')),
         rr.Sequence(
           rr.Literal('{{['),
-          rr.SavedLiteral('tagname'),
+          rr.Node('name', rr.SingleLineText()),
           rr.Literal('}}'),
           rr.MultiLineText(),
           rr.Literal('{{]'),
@@ -31,7 +31,7 @@ badpenny = rr.Parser({
 
   'value': rr.Node('value', rr.Sequence(
       rr.Literal('{{'),
-      rr.SingleLineText(),
+      rr.Node('name', rr.SingleLineText()),
       rr.Literal('}}'))),
 
   'chunk': rr.Or(
@@ -44,4 +44,7 @@ badpenny = rr.Parser({
       rr.ZeroOrMore(rr.Ref('chunk')),
       rr.EndOfText()))
 }, [
+  rr.ChildToAttribute('container', 'name'),
+  rr.ChildToAttribute('repeated', 'name'),
+  rr.ChildToAttribute('value', 'name')
 ]);
