@@ -106,3 +106,23 @@ QUnit.test('Figure', function(assert) {
 
   assert.equal(mediawiki.parseFromString(content).innerHTML, expected);
 });
+
+
+QUnit.module('badpenny');
+
+QUnit.test('Base', function(assert) {
+  assert.expect(1);
+  var content = [
+    'foo{{value1}}bar',
+    'foo{{(container}}contents{{)nottheend}}more contents{{)container}}bar',
+    'foo{{[repeated}}testing{{]notthis}}{{)repeated}}zig{{]repeated}}bar'
+  ].join('\n');
+
+  var expected = [
+    'foo<value>value1</value>bar\n',
+    'foo<container>contents{{)nottheend}}more contents</container>bar\n',
+    'foo<repeated>testing{{]notthis}}{{)repeated}}zig</repeated>bar'
+  ].join('');
+
+  assert.equal(badpenny.parseFromString(content).innerHTML, expected);
+});

@@ -471,6 +471,100 @@ rr.Ref.cache_ = {};
 /**
  * @constructor
  *
+ * @param {string} key
+ * @param {rr.typeMatcher} child
+ * @private
+ */
+rr.Save_ = function(key, child) {
+  this.key_ = key;
+  this.child_ = child;
+};
+
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
+rr.Save_.prototype.match = function(context) {
+  var iterator = this.child_.match(context);
+  return {
+    'next': function() {
+      var next = iterator.next();
+      if (next['done']) {
+        return { 'done': true };
+      }
+      var value = '';
+      var nodes = next['value']['nodes'];
+      for (var i = 0; i < nodes.length; i++) {
+        value += nodes[i].textContent;
+      }
+      return {
+        'done': false,
+        'value': {
+          'context': context.saveValue(this.key_, value),
+          'nodes': []
+        }
+      };
+    }.bind(this)
+  };
+};
+
+
+/**
+ * @param {string} key
+ * @param {rr.typeMatcher} saveChild
+ * @param {rr.typeMatcher} matchChild
+ * @return {rr.SequentialPair_}
+ */
+rr.Save = function(key, saveChild, matchChild) {
+  return new rr.SequentialPair_(new rr.Save_(key, saveChild), matchChild);
+};
+
+
+
+/**
+ * @constructor
+ *
+ * @param {string} key
+ * @private
+ */
+rr.SavedLiteral_ = function(key) {
+  this.key_ = key;
+};
+
+
+/**
+ * @param {rr.Context} context
+ * @return {rr.typeIterator}
+ */
+rr.SavedLiteral_.prototype.match = function(context) {
+  var literal = rr.Literal(context.getValue(this.key_));
+  return literal.match(context);
+};
+
+
+/**
+ * @param {string} key
+ * @return {rr.SavedLiteral_}
+ */
+rr.SavedLiteral = function(key) {
+  return (rr.SavedLiteral.cache_[key] ||
+          (rr.SavedLiteral.cache_[key] = new rr.SavedLiteral_(key)));
+};
+
+
+/**
+ * @type {Object.<string, rr.SavedLiteral_>}
+ * @const
+ * @private
+ */
+rr.SavedLiteral.cache_ = {};
+
+
+
+/**
+ * @constructor
+ *
  * @param {rr.typeMatcher} child1
  * @param {rr.typeMatcher} child2
  * @private
@@ -771,7 +865,7 @@ rr.ExtractElement = function(nodeName) {
 
 /**
  * @param {string} parentName
- * @param {string} childNames
+ * @param {Array.<string>} childNames
  * @return {rr.typeFilter}
  */
 rr.GroupSiblings = function(parentName, childNames) {
@@ -885,11 +979,14 @@ rr.ApplyFilters = function(node, filters) {
  * @param {Object.<string, rr.typeMatcher>} rules
  * @param {string} input
  * @param {number=} opt_inputIndex
+ * @param {Object.<string, string>=} opt_savedValues
  */
-rr.Context = function(rules, input, opt_inputIndex) {
+rr.Context = function(rules, input, opt_inputIndex, opt_savedValues) {
   this.rules = rules;
   this.input = input;
   this.inputIndex = opt_inputIndex || 0;
+  this.savedValues = /** @type {Object.<string, string>} */ (
+      JSON.parse(JSON.stringify(opt_savedValues || {})));
 };
 
 
@@ -897,7 +994,8 @@ rr.Context = function(rules, input, opt_inputIndex) {
  * @return {rr.Context}
  */
 rr.Context.prototype.copy = function() {
-  return new rr.Context(this.rules, this.input, this.inputIndex);
+  return new rr.Context(
+      this.rules, this.input, this.inputIndex, this.savedValues);
 };
 
 
@@ -961,6 +1059,27 @@ rr.Context.prototype.advance = function(numChars) {
   }
   var context = this.copy();
   context.inputIndex += numChars;
+  return context;
+};
+
+
+/**
+ * @param {string} key
+ * @return {string}
+ */
+rr.Context.prototype.getValue = function(key) {
+  return this.savedValues[key];
+};
+
+
+/**
+ * @param {string} key
+ * @param {string} value
+ * @return {rr.Context}
+ */
+rr.Context.prototype.saveValue = function(key, value) {
+  var context = this.copy();
+  context.savedValues[key] = value;
   return context;
 };
 
